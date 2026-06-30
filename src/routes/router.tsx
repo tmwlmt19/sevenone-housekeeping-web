@@ -3,6 +3,8 @@ import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/app-shell'
 import { AuthLayout } from '@/components/layout/auth-layout'
 import { MobileShell } from '@/components/layout/mobile-shell'
+import { RoomFormModal } from '@/features/rooms/room-form-modal'
+import { StaffFormModal } from '@/features/staff/staff-form-modal'
 import { DashboardPage } from '@/pages/dashboard'
 import { HotelSettingsPage } from '@/pages/hotel-settings'
 import { LoginPage } from '@/pages/login'
@@ -32,8 +34,22 @@ export const router = createBrowserRouter([
             element: <AppShell />,
             children: [
               { path: 'dashboard', element: <DashboardPage /> },
-              { path: 'rooms', element: <RoomsPage /> },
-              { path: 'staff', element: <StaffPage /> },
+              {
+                path: 'rooms',
+                element: <RoomsPage />,
+                children: [
+                  { path: 'new', element: <RoomFormModal /> },
+                  { path: ':roomId', element: <RoomFormModal /> },
+                ],
+              },
+              {
+                path: 'staff',
+                element: <StaffPage />,
+                children: [
+                  { path: 'new', element: <StaffFormModal /> },
+                  { path: ':userId', element: <StaffFormModal /> },
+                ],
+              },
               { path: 'tasks', element: <TasksPage /> },
             ],
           },

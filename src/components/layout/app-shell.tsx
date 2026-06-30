@@ -12,6 +12,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/auth-context'
 import type { Role } from '@/auth/types'
 import { Button } from '@/components/ui/button'
+import { useHotel } from '@/lib/queries/hotel'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -51,6 +52,7 @@ const NAV_ITEMS: readonly NavItem[] = [
 
 export function AppShell() {
   const { user, logout } = useAuth()
+  const { data: hotel } = useHotel()
   const navigate = useNavigate()
 
   const items = NAV_ITEMS.filter((item) =>
@@ -88,7 +90,9 @@ export function AppShell() {
       </aside>
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b px-6">
-          <span className="text-muted-foreground text-sm">Housekeeping</span>
+          <span className="text-sm font-medium">
+            {hotel?.name ?? 'Housekeeping'}
+          </span>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="size-4" />
             Logout
