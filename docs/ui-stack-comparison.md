@@ -4,7 +4,7 @@ A decision aid for choosing the component/styling approach for the SevenOne
 Housekeeping frontends. Written to be read standalone — no prior context needed.
 
 > **TL;DR recommendation:** **shadcn/ui + Tailwind CSS**. It fits a project that
-> has both a data-dense manager dashboard *and* a touch-friendly mobile
+> has both a data-dense manager dashboard _and_ a touch-friendly mobile
 > housekeeper view, gives us full control of branding, and keeps the bundle
 > small. The main cost is that we assemble a few complex components ourselves
 > instead of importing them.
@@ -24,22 +24,22 @@ serve all three well:
 
 So the decision criteria that actually matter here:
 
-| Criterion | Why it matters for us |
-|---|---|
-| **Tables / data grid** | Manager + owner views are table-heavy. |
-| **Touch / responsive** | Housekeepers use phones on the floor. |
-| **Custom branding** | This is a SaaS product; we'll want our own look, not a stock theme. |
-| **Bundle size** | Mobile users on hotel Wi‑Fi; smaller = faster. |
-| **Build speed** | We want a demoable MVP quickly. |
-| **Ownership / lock-in** | How hard is it to customize or migrate later? |
+| Criterion               | Why it matters for us                                               |
+| ----------------------- | ------------------------------------------------------------------- |
+| **Tables / data grid**  | Manager + owner views are table-heavy.                              |
+| **Touch / responsive**  | Housekeepers use phones on the floor.                               |
+| **Custom branding**     | This is a SaaS product; we'll want our own look, not a stock theme. |
+| **Bundle size**         | Mobile users on hotel Wi‑Fi; smaller = faster.                      |
+| **Build speed**         | We want a demoable MVP quickly.                                     |
+| **Ownership / lock-in** | How hard is it to customize or migrate later?                       |
 
 ---
 
 ## The options
 
-### 1. shadcn/ui + Tailwind CSS  ⭐ recommended
+### 1. shadcn/ui + Tailwind CSS ⭐ recommended
 
-Not a dependency you install — a CLI copies component *source* (built on Radix UI
+Not a dependency you install — a CLI copies component _source_ (built on Radix UI
 primitives + Tailwind classes) **into your repo**. You own and edit the code.
 
 - **Pros:** Full control and customization (it's your code). Excellent
@@ -98,17 +98,17 @@ with a lighter, less opinionated look."
 
 ## Side-by-side
 
-| | shadcn/ui + Tailwind | MUI | Mantine |
-|---|---|---|---|
-| Prebuilt components | Core set (you assemble complex ones) | Extensive | Extensive |
-| Advanced data grid | TanStack Table (free, headless) | MUI X (paid) | Built-in (free) |
-| Custom branding | Easiest (you own the code) | Hardest (de-Material) | Moderate |
-| Bundle size | Smallest | Largest | Medium |
-| Accessibility | Excellent (Radix) | Good | Good |
-| Touch / responsive | Excellent (Tailwind) | Good | Good |
-| Speed to first screen | Fast | Fastest | Fast |
-| Lock-in | None (code is yours) | Higher | Medium |
-| License cost | Free | Free core, paid X | Free |
+|                       | shadcn/ui + Tailwind                 | MUI                   | Mantine         |
+| --------------------- | ------------------------------------ | --------------------- | --------------- |
+| Prebuilt components   | Core set (you assemble complex ones) | Extensive             | Extensive       |
+| Advanced data grid    | TanStack Table (free, headless)      | MUI X (paid)          | Built-in (free) |
+| Custom branding       | Easiest (you own the code)           | Hardest (de-Material) | Moderate        |
+| Bundle size           | Smallest                             | Largest               | Medium          |
+| Accessibility         | Excellent (Radix)                    | Good                  | Good            |
+| Touch / responsive    | Excellent (Tailwind)                 | Good                  | Good            |
+| Speed to first screen | Fast                                 | Fastest               | Fast            |
+| Lock-in               | None (code is yours)                 | Higher                | Medium          |
+| License cost          | Free                                 | Free core, paid X     | Free            |
 
 ---
 

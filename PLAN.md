@@ -15,10 +15,10 @@ Frontend for the hotel housekeeping SaaS. The backend API lives in the separate
 
 Three audiences, **two separate frontend apps**:
 
-| App | Audience | Tenancy | Repo | Status |
-|---|---|---|---|---|
-| **Operations app** | Hotel manager / front desk (desktop) **+** housekeeper (mobile/tablet) | Single hotel (from JWT) | **this repo** | building now |
-| **Owner console** | Software owner — manage hotel clients, onboard new hotels, batch import | Cross-tenant | separate repo (future) | blocked on backend |
+| App                | Audience                                                                | Tenancy                 | Repo                   | Status             |
+| ------------------ | ----------------------------------------------------------------------- | ----------------------- | ---------------------- | ------------------ |
+| **Operations app** | Hotel manager / front desk (desktop) **+** housekeeper (mobile/tablet)  | Single hotel (from JWT) | **this repo**          | building now       |
+| **Owner console**  | Software owner — manage hotel clients, onboard new hotels, batch import | Cross-tenant            | separate repo (future) | blocked on backend |
 
 Manager and housekeeper are the **same data, different role + device**, so they
 are **one responsive, role-gated app** — not two. The owner console is a
@@ -29,22 +29,23 @@ endpoints** (see §10). This plan covers the **operations app** only.
 
 ## 1. Decisions
 
-| Area | Decision |
-|---|---|
-| Repo strategy | **Two separate repos**, not a monorepo. This repo = operations app. |
-| Sequencing | **Operations app first**; owner console after backend support lands. |
-| Framework | **Vite SPA + TypeScript** (authed internal tool, no SSR/SEO need). |
-| Package manager | pnpm |
-| API contract | **Generate TS types from `/openapi.json`** (openapi-typescript) + a thin fetch client. |
-| Server state | **TanStack Query** (caching + invalidation on CRUD). |
-| Client state | Light — Context (or Zustand) for auth/session only. |
-| Forms | **React Hook Form + Zod**. |
-| Create/edit UX | **Route-aware modals** — `/…/new` and `/…/:id` keep working as URLs but render as a dialog over the list (deep-linkable + keeps context). |
-| UI library | **shadcn/ui + Tailwind** (+ TanStack Table for data grids). |
-| Auth storage | **JWT in `localStorage`, re-login on expiry** (simplest). Hardening path documented in §3. |
-| Realtime | **Polling / refetch-on-focus** for MVP; websockets later (backend implication). |
-| Testing | Vitest + React Testing Library; Playwright for E2E happy paths. |
-| Hosting | **Vercel** (per-PR preview deploys; ~$20/mo flat once commercial). See [docs/hosting-comparison.md](docs/hosting-comparison.md). |
+| Area            | Decision                                                                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo strategy   | **Two separate repos**, not a monorepo. This repo = operations app.                                                                       |
+| Sequencing      | **Operations app first**; owner console after backend support lands.                                                                      |
+| Framework       | **Vite SPA + TypeScript** (authed internal tool, no SSR/SEO need).                                                                        |
+| Package manager | pnpm                                                                                                                                      |
+| API contract    | **Generate TS types from `/openapi.json`** (openapi-typescript) + a thin fetch client.                                                    |
+| Server state    | **TanStack Query** (caching + invalidation on CRUD).                                                                                      |
+| Client state    | Light — Context (or Zustand) for auth/session only.                                                                                       |
+| Forms           | **React Hook Form + Zod**.                                                                                                                |
+| Create/edit UX  | **Route-aware modals** — `/…/new` and `/…/:id` keep working as URLs but render as a dialog over the list (deep-linkable + keeps context). |
+| UI library      | **shadcn/ui + Tailwind** (+ TanStack Table for data grids).                                                                               |
+| Auth storage    | **JWT in `localStorage`, re-login on expiry** (simplest). Hardening path documented in §3.                                                |
+| Realtime        | **Polling / refetch-on-focus** for MVP; websockets later (backend implication).                                                           |
+| Lint / format   | **oxlint** (Vite template default — faster than ESLint) + **Prettier** for formatting.                                                    |
+| Testing         | Vitest + React Testing Library; Playwright for E2E happy paths.                                                                           |
+| Hosting         | **Vercel** (per-PR preview deploys; ~$20/mo flat once commercial). See [docs/hosting-comparison.md](docs/hosting-comparison.md).          |
 
 ---
 
@@ -76,14 +77,14 @@ registration / cross-tenant endpoints.
 
 ## 2a. Role → capability matrix (enforced by the backend; mirror in UI)
 
-| Action | Housekeeper | Manager | Admin |
-|---|---|---|---|
-| List/view rooms & tasks | ✅ | ✅ | ✅ |
-| Update task status | ✅ **own tasks only** | ✅ any | ✅ any |
-| Create/edit/delete rooms | ❌ | ✅ | ✅ |
-| Create/edit/delete & assign tasks | ❌ | ✅ | ✅ |
-| List/create/edit/delete staff | ❌ | ✅ | ✅ |
-| Edit hotel details | ❌ | ❌ | ✅ |
+| Action                            | Housekeeper           | Manager | Admin  |
+| --------------------------------- | --------------------- | ------- | ------ |
+| List/view rooms & tasks           | ✅                    | ✅      | ✅     |
+| Update task status                | ✅ **own tasks only** | ✅ any  | ✅ any |
+| Create/edit/delete rooms          | ❌                    | ✅      | ✅     |
+| Create/edit/delete & assign tasks | ❌                    | ✅      | ✅     |
+| List/create/edit/delete staff     | ❌                    | ✅      | ✅     |
+| Edit hotel details                | ❌                    | ❌      | ✅     |
 
 UI must hide actions a role can't perform and still handle 401/403 defensively.
 
@@ -182,12 +183,14 @@ Tracked here so they aren't lost; they live in the `sevenone-housekeeping-servic
 repo.
 
 **Needed for the owner console (separate, deferred app):**
+
 - **Cross-tenant access** for the software owner (a platform super-admin scope;
   today `require_same_hotel` scopes even admins to one hotel).
 - **Hotel onboarding endpoint:** create hotel + first admin in one call.
 - **Batch onboarding** capability (script/endpoint) layered on the above.
 
 **Nice-to-have for the operations app (accepted gaps for MVP):**
+
 - **Pagination** on list endpoints (currently return all rows).
 - **Dashboard/aggregate endpoints** (room-status counts, task throughput) to
   replace client-side aggregation.

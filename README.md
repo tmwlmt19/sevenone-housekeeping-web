@@ -9,9 +9,26 @@ This repo is the **hotel operations app** (manager desktop + housekeeper
 mobile/tablet, one responsive role-gated app). The owner/platform console is a
 separate, later app — see PLAN.md §0.
 
+## Getting started
+
+```bash
+pnpm install
+cp .env.example .env.local   # set VITE_API_BASE_URL (defaults to local backend)
+pnpm dev                     # start the dev server
+```
+
+Other scripts: `pnpm build` (typecheck + production build), `pnpm lint`
+(oxlint), `pnpm format` (Prettier), `pnpm typecheck`, and `pnpm gen:api`
+(regenerate API types from the backend's `/openapi.json` — run with the backend
+up).
+
+Stack: Vite + React + TypeScript, Tailwind v4 + shadcn/ui, TanStack Query, React
+Router, React Hook Form + Zod, openapi-fetch.
+
 ## Status
 
-Requirements agreed; ready to scaffold. See:
+Requirements agreed; scaffold in place (login + routing + role guards; feature
+pages are placeholders). See:
 
 - [PLAN.md](PLAN.md) — requirements, API contract, role matrix, and build phases.
 - [docs/site-map.md](docs/site-map.md) — routes, per-role navigation, and the

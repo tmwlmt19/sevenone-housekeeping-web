@@ -30,6 +30,7 @@ All API paths are under `/api/v1` and tenant-scoped as
 ```
 
 **Root redirect by role** (read from JWT after login):
+
 - `housekeeper` → `/my-tasks`
 - `manager` / `admin` → `/dashboard`
 
@@ -69,11 +70,11 @@ the backend won't allow it, so the UI gives them one focused screen.
    control.
 3. **Do the work** — tap **In progress** when starting, **Completed** when done
    (`PATCH /tasks/{id}/status`, optimistic). Completing auto-flips the room to
-   *clean* on the backend — they never touch room status directly.
+   _clean_ on the backend — they never touch room status directly.
 4. New assignments appear as the list refetches (focus/poll). Only other action
    is logout.
 
-*Looks like:* a checklist app — big touch targets, glanceable status colors, one
+_Looks like:_ a checklist app — big touch targets, glanceable status colors, one
 screen.
 
 ### Manager / front desk — desktop, runs the floor
@@ -93,10 +94,10 @@ progress. Everything except hotel-level settings.
 5. **Tasks** (`/tasks`) — the heart of it: a board grouped by status (with a list
    toggle), filterable by status/assignee. Create a task (`/tasks/new`): pick
    room + housekeeper, set priority/notes/due date (assigning auto-moves it to
-   *assigned*). Watch cards move across the board through the day; reassign as
+   _assigned_). Watch cards move across the board through the day; reassign as
    needed.
 
-*Looks like:* information-dense desktop — sidebar, tables, a kanban-style task
+_Looks like:_ information-dense desktop — sidebar, tables, a kanban-style task
 board.
 
 ### Admin — manager + the keys to the hotel
@@ -112,21 +113,21 @@ owner console, a separate app), so day-to-day they work exactly like a manager.
 3. **Hotel settings** (`/settings/hotel`) — admin-only: edit hotel name/address
    (`PUT /hotels/{id}`). Changing the name updates the top bar everyone sees.
 
-*Looks like:* indistinguishable from the manager view except the extra Settings
+_Looks like:_ indistinguishable from the manager view except the extra Settings
 entry and page.
 
 ### End-to-end: one task across all three roles
 
 > **Admin** creates the hotel's managers in Staff. → **Manager** sets up rooms,
 > then creates "clean room 204" and assigns it to housekeeper Maria (task →
-> *assigned*). → **Maria (housekeeper)** opens My Tasks on her phone, taps *In
-> progress*, cleans, taps *Completed* — room 204 auto-flips to *clean*. → On the
-> **manager's** dashboard and task board, the card lands in *Completed* and the
+> _assigned_). → **Maria (housekeeper)** opens My Tasks on her phone, taps _In
+> progress_, cleans, taps _Completed_ — room 204 auto-flips to _clean_. → On the
+> **manager's** dashboard and task board, the card lands in _Completed_ and the
 > room grid shows 204 green on the next refetch.
 
 **Boundaries worth keeping straight:** housekeepers can only change status on
 tasks assigned to them (no reassign/edit/create); room status is never edited by
-housekeepers — it changes as a side effect of completing tasks (a manager *can*
+housekeepers — it changes as a side effect of completing tasks (a manager _can_
 set room status directly, e.g. out-of-service); and admin ≠ platform owner in
 this app.
 
@@ -138,10 +139,12 @@ Notation: **reads** = queries on load; **writes** = mutations; **invalidates** =
 query keys refetched after a write.
 
 ### `/login`
+
 - **writes:** `POST /auth/login` → store JWT in localStorage.
 - then: `GET /auth/me` (or decode JWT) → seed auth context → root redirect.
 
 ### `/dashboard` (manager/admin)
+
 - **reads:** `GET /hotels/{id}/rooms`, `GET /hotels/{id}/tasks`.
 - Derived client-side (no aggregate endpoint yet): room-status counts
   (clean/dirty/in_progress/out_of_service), today's tasks, unassigned/urgent
@@ -149,10 +152,12 @@ query keys refetched after a write.
 - **refetch:** on window focus / poll, for collaborative freshness.
 
 ### `/rooms` (manager/admin)
+
 - **reads:** `GET /hotels/{id}/rooms` (TanStack Table: sort by number/floor/status).
 - Row actions → `/rooms/:roomId` (edit), delete.
 
 ### `/rooms/new`, `/rooms/:roomId`
+
 - **reads (edit):** `GET /hotels/{id}/rooms/{roomId}`.
 - **writes:** `POST` / `PUT /hotels/{id}/rooms[/{roomId}]`;
   `DELETE` on the edit/list view.
@@ -161,10 +166,12 @@ query keys refetched after a write.
   (req, unique, 1–50), floor (int, opt), room_type (≤20, uppercased), status.
 
 ### `/staff` (manager/admin)
+
 - **reads:** `GET /hotels/{id}/users`.
 - Row actions → `/staff/:userId`, delete.
 
 ### `/staff/new`, `/staff/:userId`
+
 - **reads (edit):** `GET /hotels/{id}/users/{userId}`.
 - **writes:** `POST` / `PUT /hotels/{id}/users[/{userId}]`; `DELETE`.
 - **invalidates:** staff list; also the **assignee picker** used by tasks.
@@ -172,12 +179,14 @@ query keys refetched after a write.
   (8–128; required on create, optional on edit), name (req), role.
 
 ### `/tasks` (manager/admin)
+
 - **reads:** `GET /hotels/{id}/tasks?status=&assigned_to=` (filter controls);
   plus rooms + users lists to render room numbers / assignee names.
 - View toggle: board (grouped by status) ↔ list.
 - Row/card → `/tasks/:taskId`.
 
 ### `/tasks/new`, `/tasks/:taskId`
+
 - **reads:** rooms list (room picker), users list (assignee picker), and for
   edit `GET /hotels/{id}/tasks/{taskId}`.
 - **writes:** `POST` / `PUT /hotels/{id}/tasks[/{taskId}]`; `DELETE`.
@@ -187,6 +196,7 @@ query keys refetched after a write.
   marking completed → room becomes clean.
 
 ### `/my-tasks` (housekeeper, mobile-first)
+
 - **reads:** `GET /hotels/{id}/tasks?assigned_to={me}` (id from JWT).
 - **writes:** `PATCH /hotels/{id}/tasks/{taskId}/status` (one-tap:
   in_progress → completed). Only the assignee may call this.
@@ -194,6 +204,7 @@ query keys refetched after a write.
   refetch for new assignments.
 
 ### `/settings/hotel` (admin)
+
 - **reads:** `GET /hotels/{id}`.
 - **writes:** `PUT /hotels/{id}`.
 - **invalidates:** hotel query (top-bar name).
@@ -227,4 +238,7 @@ Mutations invalidate the relevant list key(s); task completion also invalidates
   stays deep-linkable while the list keeps its place behind the overlay.
 - **Reusable UI:** status badges (room + task enums), assignee picker, room
   picker, confirm-delete dialog, form field + error wiring for 409s.
+
+```
+
 ```

@@ -31,21 +31,21 @@ mostly about developer experience.
 
 ## Decision criteria that matter here
 
-| Criterion | Why it matters for us |
-|---|---|
-| **Per-PR preview deploys** | A unique URL for each pull request → demo to a manager without touching prod. **Highest-value feature for us.** |
-| **CORS coordination** | Whatever origin we deploy to must be added to the backend's `CORS_ORIGINS`. Co-locating behind one domain can avoid this. |
-| **Env per environment** | Separate staging vs prod builds pointing at different API URLs. |
-| **Custom domain + TLS** | We'll want `app.sevenone…` eventually, with automatic HTTPS. |
-| **CI integration** | Auto build+deploy on push/PR from GitHub. |
-| **Cost** | All have free tiers that cover an MVP; differences are at scale. |
-| **One-platform ops** | The backend is on Railway; co-locating reduces moving parts/bills. |
+| Criterion                  | Why it matters for us                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Per-PR preview deploys** | A unique URL for each pull request → demo to a manager without touching prod. **Highest-value feature for us.**           |
+| **CORS coordination**      | Whatever origin we deploy to must be added to the backend's `CORS_ORIGINS`. Co-locating behind one domain can avoid this. |
+| **Env per environment**    | Separate staging vs prod builds pointing at different API URLs.                                                           |
+| **Custom domain + TLS**    | We'll want `app.sevenone…` eventually, with automatic HTTPS.                                                              |
+| **CI integration**         | Auto build+deploy on push/PR from GitHub.                                                                                 |
+| **Cost**                   | All have free tiers that cover an MVP; differences are at scale.                                                          |
+| **One-platform ops**       | The backend is on Railway; co-locating reduces moving parts/bills.                                                        |
 
 ---
 
 ## The options
 
-### 1. Vercel  ⭐ recommended
+### 1. Vercel ⭐ recommended
 
 Purpose-built static/frontend host with first-class GitHub integration.
 
@@ -99,16 +99,16 @@ Vercel's closest analog for this use case.
 
 ## Side-by-side
 
-| | Vercel | Cloudflare Pages | Railway (co-locate) | Netlify |
-|---|---|---|---|---|
-| Per-PR preview deploys | ✅ excellent | ✅ good | ⚠️ weak/manual | ✅ good |
-| Static CDN / edge | ✅ | ✅ fastest | ❌ not by default | ✅ |
-| Avoids CORS (same-origin) | ❌ | ❌ | ✅ possible | ❌ |
-| Env per environment | ✅ easy | ✅ easy | ✅ | ✅ easy |
-| Custom domain + auto TLS | ✅ | ✅ | ✅ | ✅ |
-| One platform with backend | ❌ | ❌ | ✅ | ❌ |
-| Free-tier generosity | Good | Most generous | N/A (usage-based) | Good |
-| Setup effort (static SPA) | Lowest | Low | Highest | Low |
+|                           | Vercel       | Cloudflare Pages | Railway (co-locate) | Netlify |
+| ------------------------- | ------------ | ---------------- | ------------------- | ------- |
+| Per-PR preview deploys    | ✅ excellent | ✅ good          | ⚠️ weak/manual      | ✅ good |
+| Static CDN / edge         | ✅           | ✅ fastest       | ❌ not by default   | ✅      |
+| Avoids CORS (same-origin) | ❌           | ❌               | ✅ possible         | ❌      |
+| Env per environment       | ✅ easy      | ✅ easy          | ✅                  | ✅ easy |
+| Custom domain + auto TLS  | ✅           | ✅               | ✅                  | ✅      |
+| One platform with backend | ❌           | ❌               | ✅                  | ❌      |
+| Free-tier generosity      | Good         | Most generous    | N/A (usage-based)   | Good    |
+| Setup effort (static SPA) | Lowest       | Low              | Highest             | Low     |
 
 ---
 
@@ -127,27 +127,27 @@ bundle — which is tiny. The cost driver is **"commercial use needs a paid seat
 
 **Traffic model used below**
 
-| Assumption | Value |
-|---|---|
-| App users per client (hotel) — front desk + housekeepers | ~20 |
-| 0 clients | pre-launch / dev + preview only |
-| 10 clients | ~200 users |
-| 100 clients | ~2,000 users |
-| Frontend egress per user/month (SPA, aggressively cached) | ~30 MB |
-| → Frontend egress at 10 clients | ~6 GB/month |
-| → Frontend egress at 100 clients | ~60 GB/month |
+| Assumption                                                | Value                           |
+| --------------------------------------------------------- | ------------------------------- |
+| App users per client (hotel) — front desk + housekeepers  | ~20                             |
+| 0 clients                                                 | pre-launch / dev + preview only |
+| 10 clients                                                | ~200 users                      |
+| 100 clients                                               | ~2,000 users                    |
+| Frontend egress per user/month (SPA, aggressively cached) | ~30 MB                          |
+| → Frontend egress at 10 clients                           | ~6 GB/month                     |
+| → Frontend egress at 100 clients                          | ~60 GB/month                    |
 
 Even at 100 clients, ~60 GB/month is well inside every free/Pro CDN bandwidth
 allowance — so bandwidth overage essentially never triggers at this scale.
 
 ### Estimated monthly cost
 
-| Option | Pricing model | 0 clients | 10 clients | 100 clients |
-|---|---|---|---|---|
-| **Vercel** | Flat seat + included usage (1 TB); overage usage-based | $0 on Hobby for dev¹ → **$20** once commercial | **$20** | **$20** |
-| **Cloudflare Pages** | Static serving free (unlimited bandwidth); pay only for extra builds | **$0** | **$0** | **$0** (opt. $20 for more builds/concurrency) |
-| **Netlify** | Free tier (100 GB/mo) → flat seat | **$0** | **$0** | **$0–19**² |
-| **Railway (co-locate)** | Usage-based: static container + egress (~$0.10/GB) + seat | ~$5³ | ~$5–10 | ~$10–15³ |
+| Option                  | Pricing model                                                        | 0 clients                                      | 10 clients | 100 clients                                   |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------- | ---------- | --------------------------------------------- |
+| **Vercel**              | Flat seat + included usage (1 TB); overage usage-based               | $0 on Hobby for dev¹ → **$20** once commercial | **$20**    | **$20**                                       |
+| **Cloudflare Pages**    | Static serving free (unlimited bandwidth); pay only for extra builds | **$0**                                         | **$0**     | **$0** (opt. $20 for more builds/concurrency) |
+| **Netlify**             | Free tier (100 GB/mo) → flat seat                                    | **$0**                                         | **$0**     | **$0–19**²                                    |
+| **Railway (co-locate)** | Usage-based: static container + egress (~$0.10/GB) + seat            | ~$5³                                           | ~$5–10     | ~$10–15³                                      |
 
 ¹ Vercel's **Hobby** tier is non-commercial only — fine for pre-launch dev, but a
 live commercial product needs **Pro (~$20/mo/seat)**. That $20 is effectively
@@ -155,7 +155,7 @@ flat: 60 GB is far under the 1 TB included, so 10 and 100 clients cost the same.
 
 ² Netlify free includes 100 GB bandwidth, so even 100 clients (~60 GB) can stay
 **$0** on bandwidth alone; you'd move to **Pro ($19/seat)** for team/commercial
-features or more build minutes, not for traffic. (Note: Netlify's *overage* rate
+features or more build minutes, not for traffic. (Note: Netlify's _overage_ rate
 is steep — ~$55 per extra 100 GB — but we never approach it here.)
 
 ³ Railway is the only **usage-based** option and the only one that isn't flat.
