@@ -27,8 +27,10 @@ Router, React Hook Form + Zod, openapi-fetch.
 
 ## Status
 
-Requirements agreed; scaffold in place (login + routing + role guards; feature
-pages are placeholders). See:
+MVP feature set built: login, role-gated routing, dashboard, rooms & staff CRUD,
+task board with assign/status, housekeeper "My Tasks", and hotel settings — all
+wired to the live API. Remaining: automated tests (Vitest/Playwright) and deploy.
+See:
 
 - [PLAN.md](PLAN.md) — requirements, API contract, role matrix, and build phases.
 - [docs/development.md](docs/development.md) — run it locally, scripts, env, dev
