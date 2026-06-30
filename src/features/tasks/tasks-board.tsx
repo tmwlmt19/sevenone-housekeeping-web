@@ -1,0 +1,69 @@
+import { Skeleton } from '@/components/ui/skeleton'
+import { TASK_STATUSES } from '@/lib/api/types'
+import { ApiError } from '@/lib/api/unwrap'
+import { humanize } from '@/lib/format'
+import { useRooms } from '@/lib/queries/rooms'
+import { useStaff } from '@/lib/queries/staff'
+import { useTasks } from '@/lib/queries/tasks'
+
+import { TaskCard } from './task-card'
+
+interface TasksBoardProps {
+  assignedTo?: string
+}
+
+export function TasksBoard({ assignedTo }: TasksBoardProps) {
+  const { data: tasks, isLoading, isError, error } = useTasks({ assignedTo })
+  const { data: rooms } = useRooms()
+  const { data: staff } = useStaff()
+
+  const roomLabel = (roomId: string) =>
+    rooms?.find((r) => r.id === roomId)?.room_number ?? '—'
+  const assigneeName = (userId: string | null) =>
+    userId ? (staff?.find((s) => s.id === userId)?.name ?? null) : null
+
+  if (isError) {
+    return (
+      <p className="text-destructive">
+        {error instanceof ApiError ? error.message : 'Failed to load tasks'}
+      </p>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {TASK_STATUSES.map((status) => {
+        const column = tasks?.filter((t) => t.status === status) ?? []
+        return (
+          <div key={status} className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">{humanize(status)}</h2>
+              {!isLoading && (
+                <span className="text-muted-foreground text-xs">
+                  {column.length}
+                </span>
+              )}
+            </div>
+
+            {isLoading && <Skeleton className="h-20 w-full" />}
+
+            {!isLoading && column.length === 0 && (
+              <p className="text-muted-foreground rounded-md border border-dashed p-3 text-center text-xs">
+                None
+              </p>
+            )}
+
+            {column.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                roomLabel={roomLabel(task.room_id)}
+                assigneeName={assigneeName(task.assigned_to)}
+              />
+            ))}
+          </div>
+        )
+      })}
+    </div>
+  )
+}

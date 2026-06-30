@@ -5,6 +5,7 @@ import { AuthLayout } from '@/components/layout/auth-layout'
 import { MobileShell } from '@/components/layout/mobile-shell'
 import { RoomFormModal } from '@/features/rooms/room-form-modal'
 import { StaffFormModal } from '@/features/staff/staff-form-modal'
+import { TaskFormModal } from '@/features/tasks/task-form-modal'
 import { DashboardPage } from '@/pages/dashboard'
 import { HotelSettingsPage } from '@/pages/hotel-settings'
 import { LoginPage } from '@/pages/login'
@@ -50,7 +51,14 @@ export const router = createBrowserRouter([
                   { path: ':userId', element: <StaffFormModal /> },
                 ],
               },
-              { path: 'tasks', element: <TasksPage /> },
+              {
+                path: 'tasks',
+                element: <TasksPage />,
+                children: [
+                  { path: 'new', element: <TaskFormModal /> },
+                  { path: ':taskId', element: <TaskFormModal /> },
+                ],
+              },
             ],
           },
         ],

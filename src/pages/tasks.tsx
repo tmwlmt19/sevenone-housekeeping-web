@@ -1,10 +1,59 @@
-import { PagePlaceholder } from '@/components/page-placeholder'
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Link, Outlet } from 'react-router-dom'
+
+import { PageHeader } from '@/components/page-header'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { TasksBoard } from '@/features/tasks/tasks-board'
+import { useStaff } from '@/lib/queries/staff'
+
+const ALL = 'all'
 
 export function TasksPage() {
+  const { data: staff } = useStaff()
+  const [assignee, setAssignee] = useState(ALL)
+
   return (
-    <PagePlaceholder
-      title="Tasks"
-      description="Task board with create/assign and filters. Built in the tasks phase."
-    />
+    <div>
+      <PageHeader
+        title="Tasks"
+        description="Create, assign, and track housekeeping tasks."
+        action={
+          <Button asChild>
+            <Link to="/tasks/new">
+              <Plus className="size-4" />
+              New task
+            </Link>
+          </Button>
+        }
+      />
+
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-muted-foreground text-sm">Assignee</span>
+        <Select value={assignee} onValueChange={setAssignee}>
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Everyone</SelectItem>
+            {staff?.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <TasksBoard assignedTo={assignee === ALL ? undefined : assignee} />
+      <Outlet />
+    </div>
   )
 }
