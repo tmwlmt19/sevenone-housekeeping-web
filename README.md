@@ -32,6 +32,7 @@ task board with assign/status, housekeeper "My Tasks", and hotel settings — al
 wired to the live API. Remaining: automated tests (Vitest/Playwright) and deploy.
 See:
 
+- [docs/status.md](docs/status.md) — current progress, open items, and how to resume.
 - [PLAN.md](PLAN.md) — requirements, API contract, role matrix, and build phases.
 - [docs/development.md](docs/development.md) — run it locally, scripts, env, dev
   login, regenerating API types.
