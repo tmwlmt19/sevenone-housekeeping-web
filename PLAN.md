@@ -1,138 +1,196 @@
 # SevenOne Housekeeping — Web App Plan
 
-Frontend (React) for the hotel housekeeping SaaS. The backend API lives in the
-separate `sevenone-housekeeping-service` repo (FastAPI + PostgreSQL/Neon).
+Frontend for the hotel housekeeping SaaS. The backend API lives in the separate
+`sevenone-housekeeping-service` repo (FastAPI + PostgreSQL/Neon).
 
-> **Status: open questions only.** This document is a discussion agenda, not a
-> set of decisions. Each section frames a question and sketches options; nothing
-> here is committed. "Leaning" notes are starting points for discussion, not
-> conclusions.
-
----
-
-## How to use this doc
-
-We'll work through these questions together, promote the answers into a real
-implementation plan (mirroring the backend's phased `PLAN.md`), and only then
-start building. Add comments/answers inline as we go.
+> **Status: requirements agreed; ready to scaffold.** Decisions below are
+> committed unless marked _(open)_. See also
+> [docs/ui-stack-comparison.md](docs/ui-stack-comparison.md) (component library)
+> and [docs/site-map.md](docs/site-map.md) (routes, navigation, and the API calls
+> behind each page).
 
 ---
 
-## 1. Repo & integration
+## 0. Product shape & audiences
 
-- **Separate repo vs monorepo?** Current direction: separate repo (this one).
-  *Leaning: keep separate* — distinct toolchains, independent deploys, clean REST
-  boundary. Worth a final confirmation. Revisit if we want atomic cross-repo
-  changes or shared code.
-- **How do we share the API contract?** The backend exposes OpenAPI at
-  `/openapi.json`. Options: (a) generate a typed TS client from it
-  (e.g. `openapi-typescript` / `orval`), (b) hand-write a thin API client,
-  (c) use a generated SDK. *Leaning: generate types from OpenAPI* to stay in sync.
-- **How is the API base URL configured per environment?** (local / staging / prod)
+Three audiences, **two separate frontend apps**:
 
-## 2. Framework & tooling
+| App | Audience | Tenancy | Repo | Status |
+|---|---|---|---|---|
+| **Operations app** | Hotel manager / front desk (desktop) **+** housekeeper (mobile/tablet) | Single hotel (from JWT) | **this repo** | building now |
+| **Owner console** | Software owner — manage hotel clients, onboard new hotels, batch import | Cross-tenant | separate repo (future) | blocked on backend |
 
-- **React framework?** Vite SPA vs Next.js vs React Router (framework mode) /
-  Remix. Do we need SSR/SEO (probably not — it's an authed internal tool), or is
-  a client-only SPA fine? *Leaning: Vite SPA* for a pure authed dashboard.
-- **TypeScript?** Assumed yes — confirm.
-- **Package manager?** npm / pnpm / yarn.
-- **Linting/formatting?** ESLint + Prettier config and conventions.
-
-## 3. Auth & session handling
-
-- **Where do we store the JWT?** `localStorage` (simple, XSS-exposed) vs
-  in-memory + httpOnly refresh cookie (more secure, more moving parts). This has
-  **backend implications** (cookies, CSRF, refresh endpoint).
-- **Token refresh / expiry.** Backend currently issues a single access token
-  (24h, no refresh token). Do we add refresh tokens, or just re-login on expiry
-  for the MVP?
-- **Route protection.** Redirect unauthenticated users to login; handle 401s
-  globally (interceptor) by clearing session and redirecting.
-- **Role-based UI.** Admin / manager / housekeeper see different
-  navigation and actions. How granular for the MVP?
-
-## 4. Data fetching & state
-
-- **Server state / data fetching lib?** TanStack Query (React Query) vs SWR vs
-  RTK Query. *Leaning: TanStack Query* for caching + invalidation on CRUD.
-- **Client/global state?** Likely minimal (auth/session, maybe UI prefs).
-  Context vs Zustand vs Redux. *Leaning: Context or Zustand* — keep it light.
-- **Cache invalidation strategy** after create/update/delete.
-
-## 5. UI / design system
-
-- **Component library?** shadcn/ui, MUI, Chakra, Mantine, Ant Design, or Tailwind
-  from scratch. Tradeoff: speed/consistency vs bundle size/customizability.
-- **Styling approach?** Tailwind vs CSS modules vs CSS-in-JS.
-- **Branding / visual design.** Do we have a brand direction, colors, logo?
-- **Responsive / device targets.** Housekeepers may use phones on the floor;
-  managers use desktop. How much do we invest in mobile for the MVP?
-- **Accessibility** expectations.
-
-## 6. Core screens & MVP scope
-
-Mirror the backend MVP so we can demo a full flow to a hotel manager.
-
-- **Login** page.
-- **Dashboard** — rooms grid with live status (clean/dirty/in-progress/OOS),
-  plus today's tasks.
-- **Rooms** — list + create/edit/delete (admin/manager).
-- **Users / staff** — list + create/edit/delete (admin/manager).
-- **Tasks** — create & assign (manager), board/list view, status updates.
-- **Housekeeper view** — "my tasks" + one-tap status updates.
-- **Open question:** what is the minimum set of screens to demo convincingly?
-- **Open question:** manager desktop experience vs housekeeper mobile experience —
-  one responsive app or tailored views?
-
-## 7. Multi-tenancy in the UI
-
-- Each user belongs to one hotel (from the JWT's `hotel_id`). The hotel context
-  is implicit. Do we ever need a hotel switcher (multi-hotel users)? *Not for MVP.*
-- How do we surface the current hotel (header/branding)?
-
-## 8. Forms & validation
-
-- **Form library?** React Hook Form (+ Zod) vs Formik vs uncontrolled.
-- **Validation parity** with backend rules (email, password length, room codes).
-  Can we derive validation from the OpenAPI schema?
-
-## 9. Onboarding / sign-up portal
-
-(From earlier discussion — likely post-MVP, but flag the dependency.)
-
-- **Public sign-up page** to onboard a new hotel + first admin. This **requires a
-  new backend endpoint** (create hotel + admin in one unauthenticated call). Is
-  sign-up in the web MVP, or do we keep seeding admins manually for now?
-- Batch import (CSV/Excel) UI — definitely later.
-
-## 10. Real-time updates
-
-- Housekeeping status is collaborative. Do we need live updates (websockets/SSE)
-  or is **polling / refetch-on-focus** good enough for the MVP? *Leaning: polling
-  for MVP*, revisit websockets later (backend implication).
-
-## 11. Testing
-
-- **Component/unit:** Vitest + React Testing Library?
-- **E2E:** Playwright vs Cypress?
-- How much test coverage do we want for the MVP vs after validation?
-
-## 12. CI / DevEx / deployment
-
-- **Hosting target?** Vercel / Netlify / Cloudflare Pages / Railway static.
-- **CI** (GitHub Actions): lint + test + build on PR.
-- **Environment variables** and secrets management for the frontend.
+Manager and housekeeper are the **same data, different role + device**, so they
+are **one responsive, role-gated app** — not two. The owner console is a
+genuinely separate app and is **deferred until the backend gains cross-tenant
+endpoints** (see §10). This plan covers the **operations app** only.
 
 ---
 
-## Backend changes this may require
+## 1. Decisions
 
-Tracking coordination items so they don't get lost (these live in the backend repo):
+| Area | Decision |
+|---|---|
+| Repo strategy | **Two separate repos**, not a monorepo. This repo = operations app. |
+| Sequencing | **Operations app first**; owner console after backend support lands. |
+| Framework | **Vite SPA + TypeScript** (authed internal tool, no SSR/SEO need). |
+| Package manager | pnpm |
+| API contract | **Generate TS types from `/openapi.json`** (openapi-typescript) + a thin fetch client. |
+| Server state | **TanStack Query** (caching + invalidation on CRUD). |
+| Client state | Light — Context (or Zustand) for auth/session only. |
+| Forms | **React Hook Form + Zod**. |
+| Create/edit UX | **Route-aware modals** — `/…/new` and `/…/:id` keep working as URLs but render as a dialog over the list (deep-linkable + keeps context). |
+| UI library | **shadcn/ui + Tailwind** (+ TanStack Table for data grids). |
+| Auth storage | **JWT in `localStorage`, re-login on expiry** (simplest). Hardening path documented in §3. |
+| Realtime | **Polling / refetch-on-focus** for MVP; websockets later (backend implication). |
+| Testing | Vitest + React Testing Library; Playwright for E2E happy paths. |
+| Hosting | **Vercel** (per-PR preview deploys; ~$20/mo flat once commercial). See [docs/hosting-comparison.md](docs/hosting-comparison.md). |
 
-- **Registration endpoint** for public sign-up (create hotel + first admin).
-- **Token refresh** strategy / endpoint, if we don't just re-login on expiry.
-- **Cookie-based auth + CSRF**, if we go that route instead of `localStorage`.
-- **CORS origins** — add the deployed frontend origin(s).
+---
+
+## 2. API contract (from the live backend)
+
+Base: `/api/v1`. All resources are nested under the tenant:
+`/api/v1/hotels/{hotel_id}/{rooms|users|tasks}`. `hotel_id` comes from the JWT —
+the hotel context is implicit; there is no hotel switcher.
+
+- **Auth:** `POST /auth/login` → `{ access_token, token_type:"bearer" }`. Single
+  JWT, **24h, no refresh token**. Claims: `sub` (user id), `hotel_id`, `role`.
+  `GET /auth/me` → current user.
+- **Rooms:** CRUD under `/hotels/{id}/rooms`. `room_number` unique per hotel
+  (409 on dup). Status enum: `clean | dirty | in_progress | out_of_service`.
+- **Users (staff):** CRUD under `/hotels/{id}/users`. Email unique (409).
+  Role enum: `admin | manager | housekeeper`.
+- **Tasks:** CRUD under `/hotels/{id}/tasks`; list filters `?status=` and
+  `?assigned_to=`. `PATCH /tasks/{id}/status` for status-only updates. Status
+  enum: `pending | assigned | in_progress | completed`; priority
+  `low | normal | urgent`.
+- **Hotel:** `GET/PUT /hotels/{id}` (PUT admin-only).
+
+**Domain rules to mirror in the UI:** completing a task auto-sets its room to
+`clean`; creating a task with an assignee auto-moves `pending → assigned`.
+
+**Known gaps (accepted for MVP, tracked in §10):** no pagination (lists return
+everything), no dashboard/aggregate endpoints, no refresh token, no public
+registration / cross-tenant endpoints.
+
+## 2a. Role → capability matrix (enforced by the backend; mirror in UI)
+
+| Action | Housekeeper | Manager | Admin |
+|---|---|---|---|
+| List/view rooms & tasks | ✅ | ✅ | ✅ |
+| Update task status | ✅ **own tasks only** | ✅ any | ✅ any |
+| Create/edit/delete rooms | ❌ | ✅ | ✅ |
+| Create/edit/delete & assign tasks | ❌ | ✅ | ✅ |
+| List/create/edit/delete staff | ❌ | ✅ | ✅ |
+| Edit hotel details | ❌ | ❌ | ✅ |
+
+UI must hide actions a role can't perform and still handle 401/403 defensively.
+
+---
+
+## 3. Auth & session
+
+- On login, store the JWT in `localStorage`; decode it (or call `/auth/me`) to
+  get `hotel_id`, `role`, user id for routing and role-gating.
+- A fetch wrapper attaches `Authorization: Bearer <token>`; a global handler
+  clears the session and redirects to login on **401**.
+- Protected routes redirect unauthenticated users to `/login`. No refresh token:
+  on expiry the user re-logs in.
+
+> **Security hardening backlog** (documented now, deferred for MVP):
+> `localStorage` is XSS-exposed. The more secure path is an in-memory access
+> token + an **httpOnly refresh cookie**, which requires backend work: a refresh
+> endpoint, cookie issuance, and CSRF protection. Revisit before handling real
+> customer data in production. Also: tighten CSP, audit dependencies.
+
+---
+
+## 4. Screens (operations app MVP)
+
+1. **Login.**
+2. **Dashboard (manager/front-desk):** room-status grid (clean/dirty/in‑progress/
+   OOS counts + grid) and today's tasks. Built from client-side aggregation of
+   the rooms/tasks lists until backend aggregate endpoints exist.
+3. **Rooms:** list + create/edit/delete (manager/admin).
+4. **Staff:** list + create/edit/delete (manager/admin).
+5. **Tasks:** board/list with status & assignee filters; create & assign (manager/admin).
+6. **My Tasks (housekeeper, mobile-first):** assigned tasks + one-tap status
+   updates (`in_progress → completed`).
+7. **Hotel settings (admin):** edit hotel name/address.
+8. **Self-service onboarding within a hotel:** front-desk adds rooms/staff —
+   covered by screens 3–4 (no new backend needed).
+
+Responsive: desktop-dense layouts for manager/admin; touch-first list views for
+housekeeper, gated by role from the JWT.
+
+---
+
+## 5. Data fetching & state
+
+- TanStack Query keyed by `[hotel_id, resource, filters]`; invalidate on mutation.
+- Polling/refetch-on-focus for collaborative status freshness.
+- Auth/session in Context (or Zustand). No heavier global store expected.
+
+---
+
+## 6. Forms & validation
+
+- React Hook Form + Zod. Mirror backend constraints: email format, password
+  8–128 chars, room_number 1–50 chars (unique), room_type ≤20 chars (uppercased),
+  required name. Where practical, derive/cross-check against the OpenAPI schema.
+- Surface backend 409s (duplicate room number / email) as field errors.
+
+---
+
+## 7. Testing
+
+- Vitest + RTL for components and the auth/role gating logic.
+- Playwright for the core flow: login → create room → create staff → create &
+  assign task → housekeeper completes task → room shows clean.
+
+---
+
+## 8. CI / deployment
+
+- **Vercel** for hosting: auto build + deploy on push, per-PR preview deploys,
+  prod on merge to `main`. (GitHub Actions still runs lint + typecheck + test on PR.)
+- Configure API base URL per environment via build-time env
+  (`VITE_API_BASE_URL` for local / staging / prod).
+- Coordinate **CORS origins** with the backend for each deployed origin —
+  including Vercel preview URLs if we want previews to hit a live API.
+
+---
+
+## 9. Build phases
+
+1. **Scaffold:** Vite + TS + pnpm, lint/format, UI library, routing, env config.
+2. **API layer:** generate types from `/openapi.json`, fetch client, auth interceptor.
+3. **Auth:** login, session storage, protected routes, role context.
+4. **Rooms + Staff CRUD** (manager/admin).
+5. **Tasks:** board, create/assign, filters.
+6. **Dashboard:** room-status grid + today's tasks (client-side aggregation).
+7. **Housekeeper My Tasks** (mobile-first) + one-tap status.
+8. **Hotel settings** (admin).
+9. **Tests + CI + deploy.**
+
+---
+
+## 10. Backend coordination items
+
+Tracked here so they aren't lost; they live in the `sevenone-housekeeping-service`
+repo.
+
+**Needed for the owner console (separate, deferred app):**
+- **Cross-tenant access** for the software owner (a platform super-admin scope;
+  today `require_same_hotel` scopes even admins to one hotel).
+- **Hotel onboarding endpoint:** create hotel + first admin in one call.
+- **Batch onboarding** capability (script/endpoint) layered on the above.
+
+**Nice-to-have for the operations app (accepted gaps for MVP):**
 - **Pagination** on list endpoints (currently return all rows).
-- Any **aggregate/dashboard endpoints** the UI needs (e.g. room status counts).
+- **Dashboard/aggregate endpoints** (room-status counts, task throughput) to
+  replace client-side aggregation.
+- **Token refresh** + cookie/CSRF, if/when we do the auth hardening in §3.
+- **CORS origins** updated for each deployed frontend origin.
+- **Websockets/SSE** if we move off polling for realtime.
