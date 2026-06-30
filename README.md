@@ -31,8 +31,12 @@ Requirements agreed; scaffold in place (login + routing + role guards; feature
 pages are placeholders). See:
 
 - [PLAN.md](PLAN.md) — requirements, API contract, role matrix, and build phases.
-- [docs/site-map.md](docs/site-map.md) — routes, per-role navigation, and the
-  API calls behind each page.
+- [docs/development.md](docs/development.md) — run it locally, scripts, env, dev
+  login, regenerating API types.
+- [docs/architecture.md](docs/architecture.md) — source tree, providers, auth,
+  routing/guards, API layer, and conventions.
+- [docs/site-map.md](docs/site-map.md) — routes, per-role navigation, user
+  journeys, and the API calls behind each page.
 - [docs/ui-stack-comparison.md](docs/ui-stack-comparison.md) — component-library
   options and recommendation.
 - [docs/hosting-comparison.md](docs/hosting-comparison.md) — hosting options and
