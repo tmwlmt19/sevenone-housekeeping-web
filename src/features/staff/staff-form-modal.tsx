@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { useAuth } from '@/auth/auth-context'
 import { Field } from '@/components/form/field'
 import { RouteModal } from '@/components/route-modal'
 import { Button } from '@/components/ui/button'
@@ -43,6 +44,8 @@ export function StaffFormModal() {
   const { userId } = useParams()
   const isEdit = Boolean(userId)
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isSelf = isEdit && userId === user?.id
   const { data: staff } = useStaff()
   const member = userId ? staff?.find((m) => m.id === userId) : undefined
 
@@ -141,7 +144,11 @@ export function StaffFormModal() {
             control={form.control}
             name="role"
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={isSelf}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -155,6 +162,11 @@ export function StaffFormModal() {
               </Select>
             )}
           />
+          {isSelf && (
+            <p className="text-muted-foreground text-sm">
+              You can't change your own role.
+            </p>
+          )}
         </Field>
         <Field
           label={isEdit ? 'New password' : 'Password'}

@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Field } from '@/components/form/field'
 import { RouteModal } from '@/components/route-modal'
 import { Button } from '@/components/ui/button'
@@ -16,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ROOM_STATUSES } from '@/lib/api/types'
+import { ROOM_STATUSES, type Room } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { humanize } from '@/lib/format'
 import { useCreateRoom, useRooms, useUpdateRoom } from '@/lib/queries/rooms'
@@ -55,6 +56,9 @@ export function RoomFormModal() {
   const updateRoom = useUpdateRoom()
   const isPending = createRoom.isPending || updateRoom.isPending
 
+  // When a room becomes dirty, offer to create a cleaning task for it.
+  const [dirtyPrompt, setDirtyPrompt] = useState<Room | null>(null)
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: EMPTY,
@@ -89,10 +93,16 @@ export function RoomFormModal() {
       room_type: values.room_type === '' ? null : values.room_type,
       status: values.status,
     }
+    const wasDirty = room?.status === 'dirty'
     const handlers = {
-      onSuccess: () => {
+      onSuccess: (saved: Room) => {
         toast.success(isEdit ? 'Room updated' : 'Room created')
-        navigate('/rooms')
+        // Prompt only on a transition into dirty, not on re-saving a dirty room.
+        if (saved.status === 'dirty' && !wasDirty) {
+          setDirtyPrompt(saved)
+        } else {
+          navigate('/rooms')
+        }
       },
       onError: (e: unknown) => {
         if (e instanceof ApiError && e.status === 409) {
@@ -112,69 +122,91 @@ export function RoomFormModal() {
   }
 
   return (
-    <RouteModal title={isEdit ? 'Edit room' : 'New room'} backTo="/rooms">
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
-      >
-        <Field
-          label="Room number"
-          htmlFor="room_number"
-          error={form.formState.errors.room_number?.message}
+    <>
+      <RouteModal title={isEdit ? 'Edit room' : 'New room'} backTo="/rooms">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-4"
         >
-          <Input id="room_number" {...form.register('room_number')} />
-        </Field>
-        <Field
-          label="Floor"
-          htmlFor="floor"
-          error={form.formState.errors.floor?.message}
-        >
-          <Input id="floor" inputMode="numeric" {...form.register('floor')} />
-        </Field>
-        <Field
-          label="Type"
-          htmlFor="room_type"
-          error={form.formState.errors.room_type?.message}
-        >
-          <Input
-            id="room_type"
-            placeholder="e.g. STD, DLX"
-            {...form.register('room_type')}
-          />
-        </Field>
-        <Field label="Status" error={form.formState.errors.status?.message}>
-          <Controller
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROOM_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {humanize(s)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </Field>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/rooms')}
+          <Field
+            label="Room number"
+            htmlFor="room_number"
+            error={form.formState.errors.room_number?.message}
           >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? 'Saving…' : 'Save'}
-          </Button>
-        </div>
-      </form>
-    </RouteModal>
+            <Input id="room_number" {...form.register('room_number')} />
+          </Field>
+          <Field
+            label="Floor"
+            htmlFor="floor"
+            error={form.formState.errors.floor?.message}
+          >
+            <Input id="floor" inputMode="numeric" {...form.register('floor')} />
+          </Field>
+          <Field
+            label="Type"
+            htmlFor="room_type"
+            error={form.formState.errors.room_type?.message}
+          >
+            <Input
+              id="room_type"
+              placeholder="e.g. STD, DLX"
+              {...form.register('room_type')}
+            />
+          </Field>
+          <Field label="Status" error={form.formState.errors.status?.message}>
+            <Controller
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROOM_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {humanize(s)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </Field>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/rooms')}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </RouteModal>
+
+      <ConfirmDialog
+        open={dirtyPrompt !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDirtyPrompt(null)
+            navigate('/rooms')
+          }
+        }}
+        title="Create a cleaning task?"
+        description={
+          dirtyPrompt
+            ? `Room ${dirtyPrompt.room_number} is now dirty. Create a task to clean it?`
+            : ''
+        }
+        confirmLabel="Create task"
+        onConfirm={() => {
+          if (dirtyPrompt) navigate(`/tasks/new?room=${dirtyPrompt.id}`)
+        }}
+      />
+    </>
   )
 }

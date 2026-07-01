@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -55,6 +55,9 @@ export function TaskFormModal() {
   const { taskId } = useParams()
   const isEdit = Boolean(taskId)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Prefill the room when arriving from the "room became dirty" prompt.
+  const presetRoomId = searchParams.get('room') ?? ''
 
   const { data: rooms } = useRooms()
   const { data: staff } = useStaff()
@@ -68,7 +71,7 @@ export function TaskFormModal() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: EMPTY,
+    defaultValues: { ...EMPTY, room_id: presetRoomId },
   })
 
   useEffect(() => {

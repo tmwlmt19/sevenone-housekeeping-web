@@ -44,7 +44,7 @@ real browser end-to-end — that's the main open verification gap (see below).
 ## How to resume
 
 1. **Backend** (sibling `sevenone-housekeeping-service`): `.venv/bin/uvicorn
-   app.main:app --reload` → <http://localhost:8000>. Runs against the shared Neon
+app.main:app --reload` → <http://localhost:8000>. Runs against the shared Neon
    cloud DB; see that repo's `docs/local-development.md`.
 2. **Frontend**: `pnpm install` then `pnpm dev` → <http://localhost:5173>.
 3. **Log in**: `admin@demo.com` / `DemoAdmin123!` (admin). The demo DB has the
