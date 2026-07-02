@@ -1,66 +1,91 @@
-# Project Status
+# Project Status (whole system)
 
-A snapshot of where the operations app stands, so work can resume cold. Last
-updated: 2026-06-30.
+A snapshot of the entire SevenOne Housekeeping project so work can resume cold.
+Last updated: 2026-07-02.
+
+> This doc lives in the hotel (operations) app repo but covers **all four apps**.
+> Each repo's README points here.
 
 ---
 
-## Where we are
+## The system: four repos
 
-The **operations-app MVP feature set is built and pushed to `main`** (builds,
-type-checks, lints, and formats clean). It has **not** yet been driven through a
-real browser end-to-end — that's the main open verification gap (see below).
+| Repo                            | What it is                                     | Runs on (dev) | Status                            |
+| ------------------------------- | ---------------------------------------------- | ------------- | --------------------------------- |
+| `sevenone-housekeeping-service` | FastAPI + PostgreSQL (Neon) backend            | :8000         | Built; deployed to Railway = TODO |
+| `sevenone-housekeeping-login`   | Shared login app (cookie SSO)                  | :5174         | Built                             |
+| `sevenone-housekeeping-web`     | Hotel operations app (managers + housekeepers) | :5173         | MVP built                         |
+| `sevenone-housekeeping-admin`   | Platform/owner console (cross-tenant admins)   | :5175         | MVP built                         |
 
-## Done
+All four are on `main` and pushed to GitHub (`tmwlmt19/...`).
 
-- **Planning & decisions** — see [../PLAN.md](../PLAN.md). Two separate repos
-  (this = operations app; owner console deferred), Vite + TS + pnpm, shadcn/ui +
-  Tailwind v4, TanStack Query, RHF + Zod, route-aware modals, localStorage JWT,
-  Vercel hosting. Comparison docs for [UI](ui-stack-comparison.md) and
-  [hosting](hosting-comparison.md); routes/journeys in [site-map.md](site-map.md);
-  structure in [architecture.md](architecture.md).
-- **Scaffold** — Vite/React/TS, Tailwind+shadcn, routing with auth + role guards,
-  auth context (JWT in localStorage), typed openapi-fetch client with 401
-  handling, env config.
-- **API layer** — typed query/mutation hooks (hotel, rooms, staff, tasks) with
-  tenant-scoped keys, `ApiError`/`unwrap`, and invalidation.
-- **Features** — Login; Dashboard (client-side aggregation); Rooms CRUD; Staff
-  CRUD; Tasks status board + assignee filter + create/edit; housekeeper My Tasks
-  (one-tap status); Hotel settings (admin). Hotel name in the app-shell header.
+## Auth model (cookie SSO)
 
-## Not done / open
+- Users sign in **only** at the login app. The backend sets an **httpOnly session
+  cookie**; the login app then redirects by role (admin → admin app; manager /
+  housekeeper → hotel app).
+- Hotel & admin apps have **no login screen**: on load they call `GET /auth/me`
+  (cookie sent via `credentials: 'include'`); on `401` they redirect to the login
+  app. No token in JS/localStorage.
+- `POST /auth/logout` clears the cookie. `PUT /auth/me/password` = self-service
+  password change (the only way passwords change).
 
-- **Browser verification.** The build and the API contract are verified, but the
-  rendered UI has not been clicked through (login → CRUD → assign → complete).
-  This is the first thing to do on resume.
-- **Automated tests** (PLAN §11) — no Vitest/Playwright yet.
-- **Deploy** (PLAN §8) — not deployed to Vercel; backend not on Railway yet.
-- **Polish** — bundle is one ~620 kB chunk (Vite 500 kB advisory); route-level
-  code-splitting is easy cleanup. No list/status-filter toggle on Tasks (board +
-  assignee filter only) — intentional MVP trim.
-- **Owner console** — separate future app, blocked on backend cross-tenant +
-  registration endpoints (PLAN §10).
+## Role model
 
-## How to resume
+- **Admin = platform owner** (cross-tenant): manages all hotels + all users; lives
+  in the admin app. Not a hotel employee.
+- **Manager** (hotel): rooms + tasks CRUD; views staff (read-only).
+- **Housekeeper** (hotel): own tasks only; reads rooms.
+- Self-protection: nobody can change their own role or delete their own account.
+  New users get a **temporary password** at creation; there's no password field on
+  the edit-user screen.
 
-1. **Backend** (sibling `sevenone-housekeeping-service`): `.venv/bin/uvicorn
-app.main:app --reload` → <http://localhost:8000>. Runs against the shared Neon
-   cloud DB; see that repo's `docs/local-development.md`.
-2. **Frontend**: `pnpm install` then `pnpm dev` → <http://localhost:5173>.
-3. **Log in**: `admin@demo.com` / `DemoAdmin123!` (admin). The demo DB has the
-   hotel + admin but **no rooms/tasks yet**, so you'll start on empty states and
-   can exercise the create flows.
-4. If the backend API changed, regenerate types: `pnpm gen:api` (backend up).
+## Backend surface
 
-## Suggested next steps (in order)
+`/api/v1`: `auth` (login/logout/me/me·password), `hotels` (list all + CRUD,
+admin-only for writes; cross-tenant reads for admins), `hotels/{id}/{rooms|users|
+tasks}` (tenant-scoped; housekeepers limited to their own tasks). Tests: cookie +
+bearer paths, RBAC, self-protection — **green**. Runs against a shared **Neon**
+cloud DB (no local Postgres needed).
 
-1. Manual/automated browser pass of the core flow (verify skill or Playwright).
-2. Tests: Vitest for auth/role logic; Playwright for the happy path.
-3. Deploy to Vercel; add preview/prod origins to backend `CORS_ORIGINS`.
-4. Route-level code-splitting; revisit Tasks list view if wanted.
+## Feature state per app
+
+- **Hotel app:** login-free (SSO), Dashboard (room grid + open tasks), Rooms CRUD,
+  Staff (admin-only writes; managers read), Tasks board + assignee filter +
+  create/edit (date-only due dates), housekeeper My Tasks (one-tap status),
+  Hotel settings (admin), Account (password change). Route-aware modals.
+- **Admin app:** Hotels list, Create hotel, Hotel detail (edit + staff
+  onboarding with temp passwords), Account.
+- **Login app:** email/password → role-based redirect (validated `?redirect=`).
+
+## Verified / not verified
+
+- ✅ All four build, type-check, lint clean. Backend tests green.
+- ✅ Cross-origin cookie mechanics checked with real origins (login sets cookie w/
+  `ACAC: true`; `/auth/me` + `/hotels` authenticate by cookie from :5173/:5175 w/
+  correct `ACAO`).
+- ❌ **Full browser click-through not yet done** (login → redirect → app → CRUD →
+  logout across all UIs). Top of the list.
+
+## Open / TODO
+
+- **Browser + automated tests** (Playwright E2E; Vitest for auth/role logic).
+- **Deploy**: Vercel for the three frontends; Railway custom domain for the API.
+  Requires a shared parent domain (`login./app./admin./api.<domain>`) with
+  `COOKIE_DOMAIN` + `COOKIE_SECURE=true`, and prod origins in `CORS_ORIGINS`.
+- **Deferred auth work:** rotating **refresh tokens** (currently 24h cookie,
+  re-login on expiry) and **forgot-password** (needs email/reset flow).
+- **Polish:** route-level code-splitting (bundle > 500 kB advisory).
+
+## How to resume locally
+
+1. Backend: in `sevenone-housekeeping-service`, `.venv/bin/uvicorn app.main:app --reload` (:8000). See its `docs/local-development.md`.
+2. `pnpm install && pnpm dev` in each of login (:5174), web (:5173), admin (:5175). Each needs `.env.local` (copy `.env.example`).
+3. Sign in at the **login app** (:5174) as `admin@demo.com` / `DemoAdmin123!` → routed to the admin app. Create a hotel + a manager there; sign in as that manager to use the hotel app.
 
 ## Security reminders (pre-production)
 
 - Backend `.env` (live Neon creds) and the dev admin password are committed for
   MVP convenience — rotate and gitignore before real data.
-- JWT lives in localStorage (XSS-exposed); hardening path in PLAN §3.
+- CSRF currently relies on `SameSite` + same-site subdomains; consider a
+  double-submit token when hardening. Tighten CSP; audit deps.
