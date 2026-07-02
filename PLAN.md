@@ -3,8 +3,8 @@
 Frontend for the hotel housekeeping SaaS. The backend API lives in the separate
 `sevenone-housekeeping-service` repo (FastAPI + PostgreSQL/Neon).
 
-> **Status: requirements agreed; ready to scaffold.** Decisions below are
-> committed unless marked _(open)_. See also
+> **Status: MVP built.** Current whole-system status (all four apps) lives in
+> [docs/status.md](docs/status.md). See also
 > [docs/ui-stack-comparison.md](docs/ui-stack-comparison.md) (component library)
 > and [docs/site-map.md](docs/site-map.md) (routes, navigation, and the API calls
 > behind each page).
@@ -34,23 +34,23 @@ are **one responsive, role-gated app** — not two. This plan covers the
 
 ## 1. Decisions
 
-| Area            | Decision                                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Repo strategy   | **Two separate repos**, not a monorepo. This repo = operations app.                                                                       |
-| Sequencing      | **Operations app first**; owner console after backend support lands.                                                                      |
-| Framework       | **Vite SPA + TypeScript** (authed internal tool, no SSR/SEO need).                                                                        |
-| Package manager | pnpm                                                                                                                                      |
-| API contract    | **Generate TS types from `/openapi.json`** (openapi-typescript) + a thin fetch client.                                                    |
-| Server state    | **TanStack Query** (caching + invalidation on CRUD).                                                                                      |
-| Client state    | Light — Context (or Zustand) for auth/session only.                                                                                       |
-| Forms           | **React Hook Form + Zod**.                                                                                                                |
-| Create/edit UX  | **Route-aware modals** — `/…/new` and `/…/:id` keep working as URLs but render as a dialog over the list (deep-linkable + keeps context). |
-| UI library      | **shadcn/ui + Tailwind** (+ TanStack Table for data grids).                                                                               |
-| Auth storage    | **Cookie-based SSO** — httpOnly session cookie set by the backend, shared across the login/hotel/admin apps; no token in JS. Login lives in a separate app. Refresh tokens deferred (see §3).       |
-| Realtime        | **Polling / refetch-on-focus** for MVP; websockets later (backend implication).                                                           |
-| Lint / format   | **oxlint** (Vite template default — faster than ESLint) + **Prettier** for formatting.                                                    |
-| Testing         | Vitest + React Testing Library; Playwright for E2E happy paths.                                                                           |
-| Hosting         | **Vercel** (per-PR preview deploys; ~$20/mo flat once commercial). See [docs/hosting-comparison.md](docs/hosting-comparison.md).          |
+| Area            | Decision                                                                                                                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo strategy   | **Two separate repos**, not a monorepo. This repo = operations app.                                                                                                                           |
+| Sequencing      | **Operations app first**; owner console after backend support lands.                                                                                                                          |
+| Framework       | **Vite SPA + TypeScript** (authed internal tool, no SSR/SEO need).                                                                                                                            |
+| Package manager | pnpm                                                                                                                                                                                          |
+| API contract    | **Generate TS types from `/openapi.json`** (openapi-typescript) + a thin fetch client.                                                                                                        |
+| Server state    | **TanStack Query** (caching + invalidation on CRUD).                                                                                                                                          |
+| Client state    | Light — Context (or Zustand) for auth/session only.                                                                                                                                           |
+| Forms           | **React Hook Form + Zod**.                                                                                                                                                                    |
+| Create/edit UX  | **Route-aware modals** — `/…/new` and `/…/:id` keep working as URLs but render as a dialog over the list (deep-linkable + keeps context).                                                     |
+| UI library      | **shadcn/ui + Tailwind** (+ TanStack Table for data grids).                                                                                                                                   |
+| Auth storage    | **Cookie-based SSO** — httpOnly session cookie set by the backend, shared across the login/hotel/admin apps; no token in JS. Login lives in a separate app. Refresh tokens deferred (see §3). |
+| Realtime        | **Polling / refetch-on-focus** for MVP; websockets later (backend implication).                                                                                                               |
+| Lint / format   | **oxlint** (Vite template default — faster than ESLint) + **Prettier** for formatting.                                                                                                        |
+| Testing         | Vitest + React Testing Library; Playwright for E2E happy paths.                                                                                                                               |
+| Hosting         | **Vercel** (per-PR preview deploys; ~$20/mo flat once commercial). See [docs/hosting-comparison.md](docs/hosting-comparison.md).                                                              |
 
 ---
 
@@ -60,10 +60,10 @@ Base: `/api/v1`. All resources are nested under the tenant:
 `/api/v1/hotels/{hotel_id}/{rooms|users|tasks}`. `hotel_id` comes from the JWT —
 the hotel context is implicit; there is no hotel switcher.
 
-- **Auth:** `POST /auth/login` → `{ access_token, token_type:"bearer" }`. Single
-  JWT, **24h, no refresh token**. Claims: `sub` (user id), `hotel_id`, `role`.
-  `GET /auth/me` → current user. `PUT /auth/me/password` → self-service password
-  change (verifies current password).
+- **Auth:** `POST /auth/login` sets an **httpOnly session cookie** (and returns a
+  bearer token for tests). Token is a **24h JWT, no refresh** (deferred). Claims:
+  `sub`, `hotel_id`, `role`. `GET /auth/me` → current user; `POST /auth/logout`
+  clears the cookie; `PUT /auth/me/password` → self-service password change.
 - **Rooms:** CRUD under `/hotels/{id}/rooms`. `room_number` unique per hotel
   (409 on dup). Status enum: `clean | dirty | in_progress | out_of_service`.
 - **Users (staff):** CRUD under `/hotels/{id}/users`. Email unique (409).
@@ -79,8 +79,9 @@ the hotel context is implicit; there is no hotel switcher.
 `clean`; creating a task with an assignee auto-moves `pending → assigned`.
 
 **Known gaps (accepted for MVP, tracked in §10):** no pagination (lists return
-everything), no dashboard/aggregate endpoints, no refresh token, no public
-registration / cross-tenant endpoints.
+everything), no dashboard/aggregate endpoints, no refresh token, no
+forgot-password flow. (Cross-tenant admin + `GET /hotels` now exist — see the
+admin app.)
 
 ## 2a. Role model
 
