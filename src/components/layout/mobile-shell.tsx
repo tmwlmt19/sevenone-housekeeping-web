@@ -1,17 +1,11 @@
 import { LogOut, UserCircle } from 'lucide-react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/auth-context'
 import { Button } from '@/components/ui/button'
 
 export function MobileShell() {
   const { logout } = useAuth()
-  const navigate = useNavigate()
-
-  function handleLogout() {
-    logout()
-    navigate('/login', { replace: true })
-  }
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
@@ -23,7 +17,7 @@ export function MobileShell() {
               <UserCircle className="size-4" />
             </Link>
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
+          <Button variant="ghost" size="sm" onClick={() => logout()}>
             <LogOut className="size-4" />
             Logout
           </Button>

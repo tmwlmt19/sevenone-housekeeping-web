@@ -92,18 +92,18 @@ Housekeeper only** — never admin.
 
 ## 2b. Role → capability matrix (enforced by the backend; mirrored in UI)
 
-| Action                          | Housekeeper           | Manager    | Admin  |
-| ------------------------------- | --------------------- | ---------- | ------ |
-| View rooms                      | ✅                    | ✅         | ✅     |
-| View tasks                      | ✅ **own only**       | ✅ all     | ✅ all |
-| Update task status              | ✅ **own only**       | ✅ any     | ✅ any |
-| Create/edit/delete rooms        | ❌                    | ✅         | ✅     |
-| Create/edit/assign tasks        | ❌                    | ✅         | ✅     |
-| View staff list                 | ❌                    | ✅ (read)  | ✅     |
-| Create/edit/delete staff        | ❌                    | ❌         | ✅     |
-| Edit hotel details              | ❌                    | ❌         | ✅     |
-| Create hotel (tenant)           | ❌                    | ❌         | ✅     |
-| Change **own** password         | ✅                    | ✅         | ✅     |
+| Action                   | Housekeeper     | Manager   | Admin  |
+| ------------------------ | --------------- | --------- | ------ |
+| View rooms               | ✅              | ✅        | ✅     |
+| View tasks               | ✅ **own only** | ✅ all    | ✅ all |
+| Update task status       | ✅ **own only** | ✅ any    | ✅ any |
+| Create/edit/delete rooms | ❌              | ✅        | ✅     |
+| Create/edit/assign tasks | ❌              | ✅        | ✅     |
+| View staff list          | ❌              | ✅ (read) | ✅     |
+| Create/edit/delete staff | ❌              | ❌        | ✅     |
+| Edit hotel details       | ❌              | ❌        | ✅     |
+| Create hotel (tenant)    | ❌              | ❌        | ✅     |
+| Change **own** password  | ✅              | ✅        | ✅     |
 
 Self-protection (all roles): you cannot change your own role or delete your own
 account. Passwords are set as a **temporary password at creation** and changed

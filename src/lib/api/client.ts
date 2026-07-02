@@ -1,28 +1,23 @@
 import createClient, { type Middleware } from 'openapi-fetch'
 
+import { redirectToLogin } from '@/auth/redirect'
 import { env } from '@/lib/env'
 
 import type { paths } from './schema'
-import { clearToken, getToken, notifyUnauthorized } from './token-store'
 
 const authMiddleware: Middleware = {
-  onRequest({ request }) {
-    const token = getToken()
-    if (token) {
-      request.headers.set('Authorization', `Bearer ${token}`)
-    }
-    return request
-  },
   onResponse({ response }) {
-    // Global 401 handling: clear the session and let the app redirect to login.
+    // The session cookie is missing/expired — bounce to the shared login app.
     if (response.status === 401) {
-      clearToken()
-      notifyUnauthorized()
+      redirectToLogin()
     }
     return response
   },
 }
 
-/** Typed API client. Paths are filled in once `pnpm gen:api` runs (Phase 2). */
-export const api = createClient<paths>({ baseUrl: env.apiBaseUrl })
+// Cookie-based auth: the browser sends the httpOnly session cookie automatically.
+export const api = createClient<paths>({
+  baseUrl: env.apiBaseUrl,
+  credentials: 'include',
+})
 api.use(authMiddleware)

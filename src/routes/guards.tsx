@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/auth-context'
 import type { Role } from '@/auth/types'
@@ -8,12 +8,20 @@ export function homePathFor(role: Role): string {
   return role === 'housekeeper' ? '/my-tasks' : '/dashboard'
 }
 
-/** Gate: must be authenticated, else redirect to /login (remembering origin). */
+function FullScreen({ children }: { children: string }) {
+  return (
+    <div className="text-muted-foreground flex min-h-screen items-center justify-center text-sm">
+      {children}
+    </div>
+  )
+}
+
+/** Gate: must have a session. While checking (or redirecting to the login app
+ * on 401) we render a lightweight placeholder. */
 export function RequireAuth() {
-  const { isAuthenticated } = useAuth()
-  const location = useLocation()
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />
+  const { status } = useAuth()
+  if (status !== 'authed') {
+    return <FullScreen>Loading…</FullScreen>
   }
   return <Outlet />
 }
@@ -21,7 +29,7 @@ export function RequireAuth() {
 /** Gate: role must be allowed, else bounce to the user's own home. */
 export function RequireRole({ allow }: { allow: Role[] }) {
   const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <FullScreen>Loading…</FullScreen>
   if (!allow.includes(user.role)) {
     return <Navigate to={homePathFor(user.role)} replace />
   }
@@ -31,6 +39,6 @@ export function RequireRole({ allow }: { allow: Role[] }) {
 /** Index route: send each role to its home. */
 export function RootRedirect() {
   const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <FullScreen>Loading…</FullScreen>
   return <Navigate to={homePathFor(user.role)} replace />
 }

@@ -8,7 +8,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/auth-context'
 import type { Role } from '@/auth/types'
@@ -54,16 +54,10 @@ const NAV_ITEMS: readonly NavItem[] = [
 export function AppShell() {
   const { user, logout } = useAuth()
   const { data: hotel } = useHotel()
-  const navigate = useNavigate()
 
   const items = NAV_ITEMS.filter((item) =>
     user ? item.roles.includes(user.role) : false,
   )
-
-  function handleLogout() {
-    logout()
-    navigate('/login', { replace: true })
-  }
 
   return (
     <div className="flex min-h-screen">
@@ -101,7 +95,7 @@ export function AppShell() {
                 Account
               </Link>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button variant="ghost" size="sm" onClick={() => logout()}>
               <LogOut className="size-4" />
               Logout
             </Button>

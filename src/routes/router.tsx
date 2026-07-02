@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 
 import { AppShell } from '@/components/layout/app-shell'
-import { AuthLayout } from '@/components/layout/auth-layout'
 import { MobileShell } from '@/components/layout/mobile-shell'
 import { RoomFormModal } from '@/features/rooms/room-form-modal'
 import { StaffFormModal } from '@/features/staff/staff-form-modal'
@@ -9,7 +8,6 @@ import { TaskFormModal } from '@/features/tasks/task-form-modal'
 import { AccountPage } from '@/pages/account'
 import { DashboardPage } from '@/pages/dashboard'
 import { HotelSettingsPage } from '@/pages/hotel-settings'
-import { LoginPage } from '@/pages/login'
 import { MyTasksPage } from '@/pages/my-tasks'
 import { NotFoundPage } from '@/pages/not-found'
 import { RoomsPage } from '@/pages/rooms'
@@ -19,11 +17,6 @@ import { TasksPage } from '@/pages/tasks'
 import { RequireAuth, RequireRole, RootRedirect } from './guards'
 
 export const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: <AuthLayout />,
-    children: [{ index: true, element: <LoginPage /> }],
-  },
   {
     element: <RequireAuth />,
     children: [

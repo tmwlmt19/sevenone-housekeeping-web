@@ -8,58 +8,51 @@ import {
   type ReactNode,
 } from 'react'
 
-import {
-  clearToken,
-  getToken,
-  setOnUnauthorized,
-  setToken,
-} from '@/lib/api/token-store'
+import { api } from '@/lib/api/client'
 
-import { decodeJwt, isExpired } from './jwt'
+import { redirectToLogin } from './redirect'
 import type { AuthUser } from './types'
+
+type Status = 'loading' | 'authed' | 'unauthed'
 
 interface AuthContextValue {
   user: AuthUser | null
-  isAuthenticated: boolean
-  login: (token: string) => void
+  status: Status
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function userFromToken(token: string | null): AuthUser | null {
-  if (!token) return null
-  const claims = decodeJwt(token)
-  if (!claims || isExpired(claims)) return null
-  return { id: claims.sub, hotelId: claims.hotel_id, role: claims.role }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() =>
-    userFromToken(getToken()),
-  )
-
-  const logout = useCallback(() => {
-    clearToken()
-    setUser(null)
-  }, [])
-
-  const login = useCallback((token: string) => {
-    setToken(token)
-    setUser(userFromToken(token))
-  }, [])
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [status, setStatus] = useState<Status>('loading')
 
   useEffect(() => {
-    // Drop any stale/expired token left in storage on first load.
-    if (!user && getToken()) clearToken()
-    // The API client calls this when it sees a 401.
-    setOnUnauthorized(() => setUser(null))
-    return () => setOnUnauthorized(null)
-  }, [user])
+    let active = true
+    void (async () => {
+      const { data } = await api.GET('/api/v1/auth/me')
+      if (!active) return
+      if (data) {
+        setUser({ id: data.id, hotelId: data.hotel_id, role: data.role })
+        setStatus('authed')
+      } else {
+        // A 401 already triggered a redirect to the login app in the client.
+        setStatus('unauthed')
+      }
+    })()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const logout = useCallback(async () => {
+    await api.POST('/api/v1/auth/logout', {})
+    redirectToLogin()
+  }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated: user !== null, login, logout }),
-    [user, login, logout],
+    () => ({ user, status, logout }),
+    [user, status, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
