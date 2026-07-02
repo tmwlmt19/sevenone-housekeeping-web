@@ -4,10 +4,11 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  UserCircle,
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '@/auth/auth-context'
 import type { Role } from '@/auth/types'
@@ -93,10 +94,18 @@ export function AppShell() {
           <span className="text-sm font-medium">
             {hotel?.name ?? 'Housekeeping'}
           </span>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="size-4" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/account">
+                <UserCircle className="size-4" />
+                Account
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="size-4" />
+              Logout
+            </Button>
+          </div>
         </header>
         <main className="flex-1 p-6">
           <Outlet />

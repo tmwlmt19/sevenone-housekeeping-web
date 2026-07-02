@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import { useAuth } from '@/auth/auth-context'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,9 +22,13 @@ import { humanize } from '@/lib/format'
 import { useDeleteStaff, useStaff } from '@/lib/queries/staff'
 
 export function StaffTable() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const { data: staff, isLoading, isError, error } = useStaff()
   const deleteStaff = useDeleteStaff()
   const [toDelete, setToDelete] = useState<Staff | null>(null)
+
+  const colCount = isAdmin ? 4 : 3
 
   function handleDelete() {
     if (!toDelete) return
@@ -46,14 +51,16 @@ export function StaffTable() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              {isAdmin && (
+                <TableHead className="w-24 text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={4}>
+                  <TableCell colSpan={colCount}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
@@ -61,7 +68,7 @@ export function StaffTable() {
 
             {isError && (
               <TableRow>
-                <TableCell colSpan={4} className="text-destructive">
+                <TableCell colSpan={colCount} className="text-destructive">
                   {error instanceof ApiError
                     ? error.message
                     : 'Failed to load staff'}
@@ -72,10 +79,10 @@ export function StaffTable() {
             {staff && staff.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={colCount}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No staff yet. Add your team to start assigning tasks.
+                  No staff yet.
                 </TableCell>
               </TableRow>
             )}
@@ -87,21 +94,28 @@ export function StaffTable() {
                 <TableCell>
                   <Badge variant="secondary">{humanize(member.role)}</Badge>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button asChild variant="ghost" size="icon" aria-label="Edit">
-                    <Link to={`/staff/${member.id}`}>
-                      <Pencil className="size-4" />
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Delete"
-                    onClick={() => setToDelete(member)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </TableCell>
+                {isAdmin && (
+                  <TableCell className="text-right">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Edit"
+                    >
+                      <Link to={`/staff/${member.id}`}>
+                        <Pencil className="size-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Delete"
+                      onClick={() => setToDelete(member)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

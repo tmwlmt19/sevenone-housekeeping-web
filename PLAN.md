@@ -57,16 +57,18 @@ the hotel context is implicit; there is no hotel switcher.
 
 - **Auth:** `POST /auth/login` → `{ access_token, token_type:"bearer" }`. Single
   JWT, **24h, no refresh token**. Claims: `sub` (user id), `hotel_id`, `role`.
-  `GET /auth/me` → current user.
+  `GET /auth/me` → current user. `PUT /auth/me/password` → self-service password
+  change (verifies current password).
 - **Rooms:** CRUD under `/hotels/{id}/rooms`. `room_number` unique per hotel
   (409 on dup). Status enum: `clean | dirty | in_progress | out_of_service`.
 - **Users (staff):** CRUD under `/hotels/{id}/users`. Email unique (409).
-  Role enum: `admin | manager | housekeeper`.
+  Role enum: `admin | manager | housekeeper` (see §2b for the role model).
 - **Tasks:** CRUD under `/hotels/{id}/tasks`; list filters `?status=` and
   `?assigned_to=`. `PATCH /tasks/{id}/status` for status-only updates. Status
   enum: `pending | assigned | in_progress | completed`; priority
   `low | normal | urgent`.
-- **Hotel:** `GET/PUT /hotels/{id}` (PUT admin-only).
+- **Hotel:** `GET/PUT /hotels/{id}` (PUT admin-only), `POST /hotels` (create
+  tenant, admin-only — a platform action).
 
 **Domain rules to mirror in the UI:** completing a task auto-sets its room to
 `clean`; creating a task with an assignee auto-moves `pending → assigned`.
@@ -75,18 +77,39 @@ the hotel context is implicit; there is no hotel switcher.
 everything), no dashboard/aggregate endpoints, no refresh token, no public
 registration / cross-tenant endpoints.
 
-## 2a. Role → capability matrix (enforced by the backend; mirror in UI)
+## 2a. Role model
 
-| Action                            | Housekeeper           | Manager | Admin  |
-| --------------------------------- | --------------------- | ------- | ------ |
-| List/view rooms & tasks           | ✅                    | ✅      | ✅     |
-| Update task status                | ✅ **own tasks only** | ✅ any  | ✅ any |
-| Create/edit/delete rooms          | ❌                    | ✅      | ✅     |
-| Create/edit/delete & assign tasks | ❌                    | ✅      | ✅     |
-| List/create/edit/delete staff     | ❌                    | ✅      | ✅     |
-| Edit hotel details                | ❌                    | ❌      | ✅     |
+- **Admin = platform owner** (us). Not a hotel employee. Creates hotels/tenants
+  and manages all users; ultimately operated via the **separate admin webapp**
+  (owner console). In this hotel app, admin-only actions exist but the day-to-day
+  users are managers and housekeepers.
+- **Manager = hotel employee** (front desk). Runs rooms and tasks; views staff.
+- **Housekeeper = hotel employee.** Only their own tasks; reads rooms.
 
-UI must hide actions a role can't perform and still handle 401/403 defensively.
+Every user is scoped to their own hotel (`require_same_hotel`); hotel users only
+ever see their own hotel. The hotel staff role selector offers **Manager /
+Housekeeper only** — never admin.
+
+## 2b. Role → capability matrix (enforced by the backend; mirrored in UI)
+
+| Action                          | Housekeeper           | Manager    | Admin  |
+| ------------------------------- | --------------------- | ---------- | ------ |
+| View rooms                      | ✅                    | ✅         | ✅     |
+| View tasks                      | ✅ **own only**       | ✅ all     | ✅ all |
+| Update task status              | ✅ **own only**       | ✅ any     | ✅ any |
+| Create/edit/delete rooms        | ❌                    | ✅         | ✅     |
+| Create/edit/assign tasks        | ❌                    | ✅         | ✅     |
+| View staff list                 | ❌                    | ✅ (read)  | ✅     |
+| Create/edit/delete staff        | ❌                    | ❌         | ✅     |
+| Edit hotel details              | ❌                    | ❌         | ✅     |
+| Create hotel (tenant)           | ❌                    | ❌         | ✅     |
+| Change **own** password         | ✅                    | ✅         | ✅     |
+
+Self-protection (all roles): you cannot change your own role or delete your own
+account. Passwords are set as a **temporary password at creation** and changed
+by the user themselves on the account page — there is no password field on the
+edit-user screen. UI hides actions a role can't perform and still handles
+401/403 defensively.
 
 ---
 

@@ -6,6 +6,7 @@ import { MobileShell } from '@/components/layout/mobile-shell'
 import { RoomFormModal } from '@/features/rooms/room-form-modal'
 import { StaffFormModal } from '@/features/staff/staff-form-modal'
 import { TaskFormModal } from '@/features/tasks/task-form-modal'
+import { AccountPage } from '@/pages/account'
 import { DashboardPage } from '@/pages/dashboard'
 import { HotelSettingsPage } from '@/pages/hotel-settings'
 import { LoginPage } from '@/pages/login'
@@ -27,6 +28,8 @@ export const router = createBrowserRouter([
     element: <RequireAuth />,
     children: [
       { index: true, element: <RootRedirect /> },
+      // Self-service account page — any authenticated role.
+      { path: 'account', element: <AccountPage /> },
       // Manager / admin — desktop AppShell.
       {
         element: <RequireRole allow={['admin', 'manager']} />,
@@ -47,8 +50,14 @@ export const router = createBrowserRouter([
                 path: 'staff',
                 element: <StaffPage />,
                 children: [
-                  { path: 'new', element: <StaffFormModal /> },
-                  { path: ':userId', element: <StaffFormModal /> },
+                  // Creating/editing staff is admin-only.
+                  {
+                    element: <RequireRole allow={['admin']} />,
+                    children: [
+                      { path: 'new', element: <StaffFormModal /> },
+                      { path: ':userId', element: <StaffFormModal /> },
+                    ],
+                  },
                 ],
               },
               {

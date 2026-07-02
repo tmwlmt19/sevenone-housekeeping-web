@@ -17,10 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { USER_ROLES, type StaffCreate, type StaffUpdate } from '@/lib/api/types'
+import type { StaffCreate, StaffUpdate, UserRole } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { humanize } from '@/lib/format'
 import { useCreateStaff, useStaff, useUpdateStaff } from '@/lib/queries/staff'
+
+// Hotel staff roles only — "admin" is a platform role, managed elsewhere.
+const HOTEL_ROLES: UserRole[] = ['manager', 'housekeeper']
 
 function makeSchema(isEdit: boolean) {
   return z.object({
@@ -79,6 +82,13 @@ export function StaffFormModal() {
       </RouteModal>
     )
   }
+
+  // Show hotel roles, plus the member's current role if it's outside that set
+  // (e.g. an admin editing their own account) so the value still displays.
+  const roleOptions =
+    member && !HOTEL_ROLES.includes(member.role)
+      ? [member.role, ...HOTEL_ROLES]
+      : HOTEL_ROLES
 
   function onSubmit(values: FormValues) {
     const handlers = {
@@ -153,7 +163,7 @@ export function StaffFormModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {USER_ROLES.map((r) => (
+                  {roleOptions.map((r) => (
                     <SelectItem key={r} value={r}>
                       {humanize(r)}
                     </SelectItem>
@@ -168,19 +178,23 @@ export function StaffFormModal() {
             </p>
           )}
         </Field>
-        <Field
-          label={isEdit ? 'New password' : 'Password'}
-          htmlFor="password"
-          error={form.formState.errors.password?.message}
-        >
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            placeholder={isEdit ? 'Leave blank to keep current' : undefined}
-            {...form.register('password')}
-          />
-        </Field>
+        {!isEdit && (
+          <Field
+            label="Temporary password"
+            htmlFor="password"
+            error={form.formState.errors.password?.message}
+          >
+            <Input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              {...form.register('password')}
+            />
+            <p className="text-muted-foreground text-sm">
+              The user can change this on their account page after signing in.
+            </p>
+          </Field>
+        )}
         <div className="flex justify-end gap-2 pt-2">
           <Button
             type="button"
