@@ -21,9 +21,14 @@ Three audiences, **two separate frontend apps**:
 | **Owner console**  | Software owner — manage hotel clients, onboard new hotels, batch import | Cross-tenant            | separate repo (future) | blocked on backend |
 
 Manager and housekeeper are the **same data, different role + device**, so they
-are **one responsive, role-gated app** — not two. The owner console is a
-genuinely separate app and is **deferred until the backend gains cross-tenant
-endpoints** (see §10). This plan covers the **operations app** only.
+are **one responsive, role-gated app** — not two. This plan covers the
+**operations app** only.
+
+> **Update — the system is now four apps + backend**, all separate repos:
+> `sevenone-housekeeping-login` (shared cookie-SSO login), this **operations
+> app**, `sevenone-housekeeping-admin` (the platform/owner console — built; admins
+> are cross-tenant), and `sevenone-housekeeping-service` (backend). Auth is
+> cookie-based SSO (see §2a, §3).
 
 ---
 
@@ -41,7 +46,7 @@ endpoints** (see §10). This plan covers the **operations app** only.
 | Forms           | **React Hook Form + Zod**.                                                                                                                |
 | Create/edit UX  | **Route-aware modals** — `/…/new` and `/…/:id` keep working as URLs but render as a dialog over the list (deep-linkable + keeps context). |
 | UI library      | **shadcn/ui + Tailwind** (+ TanStack Table for data grids).                                                                               |
-| Auth storage    | **JWT in `localStorage`, re-login on expiry** (simplest). Hardening path documented in §3.                                                |
+| Auth storage    | **Cookie-based SSO** — httpOnly session cookie set by the backend, shared across the login/hotel/admin apps; no token in JS. Login lives in a separate app. Refresh tokens deferred (see §3).       |
 | Realtime        | **Polling / refetch-on-focus** for MVP; websockets later (backend implication).                                                           |
 | Lint / format   | **oxlint** (Vite template default — faster than ESLint) + **Prettier** for formatting.                                                    |
 | Testing         | Vitest + React Testing Library; Playwright for E2E happy paths.                                                                           |
@@ -115,18 +120,22 @@ edit-user screen. UI hides actions a role can't perform and still handles
 
 ## 3. Auth & session
 
-- On login, store the JWT in `localStorage`; decode it (or call `/auth/me`) to
-  get `hotel_id`, `role`, user id for routing and role-gating.
-- A fetch wrapper attaches `Authorization: Bearer <token>`; a global handler
-  clears the session and redirects to login on **401**.
-- Protected routes redirect unauthenticated users to `/login`. No refresh token:
-  on expiry the user re-logs in.
+**Cookie-based SSO** (implemented). The shared **login app** authenticates against
+the backend, which sets an **httpOnly session cookie** on the parent domain so the
+login/hotel/admin apps share one session. This app:
 
-> **Security hardening backlog** (documented now, deferred for MVP):
-> `localStorage` is XSS-exposed. The more secure path is an in-memory access
-> token + an **httpOnly refresh cookie**, which requires backend work: a refresh
-> endpoint, cookie issuance, and CSRF protection. Revisit before handling real
-> customer data in production. Also: tighten CSP, audit dependencies.
+- Has **no login screen**; it calls `GET /auth/me` on load (cookie sent via
+  `credentials: 'include'`) to get the user (id, `hotel_id`, `role`).
+- Sends the cookie automatically on every request — **no token in JS/localStorage**,
+  no `Authorization` header.
+- On **401**, redirects to the login app (`VITE_LOGIN_URL`) with a return URL;
+  logout calls `POST /auth/logout` then redirects there.
+
+CSRF is handled by `SameSite` + same-site subdomains. **Deferred: refresh
+tokens** — the cookie holds the 24h access token and the user re-logs in on
+expiry; add rotating refresh later (also tracked in the backend `docs/auth.md`
+and `app/config.py`). Prod needs all apps + API under one parent domain with
+`COOKIE_DOMAIN`/`COOKIE_SECURE` set.
 
 ---
 
