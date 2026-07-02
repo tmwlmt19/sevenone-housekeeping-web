@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Task, TaskStatus } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { formatDateTime } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useTasks, useUpdateTaskStatus } from '@/lib/queries/tasks'
 
@@ -72,7 +72,7 @@ export function MyTasksPage() {
                   <TaskStatusBadge status={task.status} />
                   {task.due_date && (
                     <span className="text-muted-foreground text-xs">
-                      Due {formatDateTime(task.due_date)}
+                      Due {formatDate(task.due_date)}
                     </span>
                   )}
                 </div>

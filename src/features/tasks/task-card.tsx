@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import { PriorityBadge } from '@/components/status-badge'
 import type { Task } from '@/lib/api/types'
-import { formatDateTime } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 
 interface TaskCardProps {
   task: Task
@@ -26,7 +26,7 @@ export function TaskCard({ task, roomLabel, assigneeName }: TaskCardProps) {
       {task.notes && <p className="mt-1 line-clamp-2 text-sm">{task.notes}</p>}
       {task.due_date && (
         <p className="text-muted-foreground mt-2 text-xs">
-          Due {formatDateTime(task.due_date)}
+          Due {formatDate(task.due_date)}
         </p>
       )}
     </Link>

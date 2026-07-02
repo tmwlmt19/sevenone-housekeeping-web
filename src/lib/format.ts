@@ -17,31 +17,19 @@ export function formatDate(iso: string | null): string {
   })
 }
 
-export function formatDateTime(iso: string | null): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
-
-/** For <input type="datetime-local"> value (local time, no seconds). */
-export function toDateTimeLocal(iso: string | null): string {
+/** For <input type="date"> value (YYYY-MM-DD, local). */
+export function toDateInput(iso: string | null): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/** datetime-local string -> ISO (UTC) for the API, or null if empty. */
-export function fromDateTimeLocal(value: string): string | null {
+/** date-input string (YYYY-MM-DD) -> ISO for the API, or null if empty. */
+export function fromDateInput(value: string): string | null {
   if (!value) return null
-  const d = new Date(value)
+  const d = new Date(`${value}T00:00:00`)
   if (Number.isNaN(d.getTime())) return null
   return d.toISOString()
 }

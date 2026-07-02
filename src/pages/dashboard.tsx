@@ -9,7 +9,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Task, TaskPriority } from '@/lib/api/types'
-import { formatDateTime } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
 import { useTasks } from '@/lib/queries/tasks'
@@ -156,7 +156,7 @@ function OpenTaskRow({
           <span className="font-medium">Room {roomLabel}</span>
           <span className="text-muted-foreground truncate text-sm">
             {assignee ?? 'Unassigned'}
-            {task.due_date && ` · Due ${formatDateTime(task.due_date)}`}
+            {task.due_date && ` · Due ${formatDate(task.due_date)}`}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">

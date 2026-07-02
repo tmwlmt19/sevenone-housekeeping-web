@@ -24,7 +24,7 @@ import {
   type TaskUpdate,
 } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { fromDateTimeLocal, humanize, toDateTimeLocal } from '@/lib/format'
+import { fromDateInput, humanize, toDateInput } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
 import { useCreateTask, useTasks, useUpdateTask } from '@/lib/queries/tasks'
@@ -82,7 +82,7 @@ export function TaskFormModal() {
         status: task.status,
         priority: task.priority,
         notes: task.notes ?? '',
-        due_date: toDateTimeLocal(task.due_date),
+        due_date: toDateInput(task.due_date),
       })
     }
   }, [task, form])
@@ -105,7 +105,7 @@ export function TaskFormModal() {
       status: values.status,
       priority: values.priority,
       notes: values.notes.trim() === '' ? null : values.notes,
-      due_date: fromDateTimeLocal(values.due_date),
+      due_date: fromDateInput(values.due_date),
     }
     const handlers = {
       onSuccess: () => {
@@ -215,11 +215,7 @@ export function TaskFormModal() {
         </div>
 
         <Field label="Due date" htmlFor="due_date">
-          <Input
-            id="due_date"
-            type="datetime-local"
-            {...form.register('due_date')}
-          />
+          <Input id="due_date" type="date" {...form.register('due_date')} />
         </Field>
 
         <Field label="Notes" htmlFor="notes">
