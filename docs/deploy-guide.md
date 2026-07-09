@@ -53,7 +53,8 @@ Repo: `sevenone-housekeeping-service`. It has `railway.toml`, so Railway runs
    [environments.md](environments.md) **prod** column — `DATABASE_URL` (prod
    branch, direct host), a fresh `JWT_SECRET`, `SESSION_COOKIE_NAME=sevenone_session`,
    `COOKIE_DOMAIN=seven1solutions.com`, `COOKIE_SECURE=true`, `COOKIE_SAMESITE=lax`,
-   `CORS_ORIGINS=<the 3 prod origins>`. Do **not** set `PORT` (Railway injects it).
+   `CORS_ORIGINS=<the 3 prod origins>`, and `PORT=8080` (the app runs
+   `uvicorn --port $PORT`, so this is the port to route the custom domain to).
 3. **Generate a JWT secret:** `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
 4. **Staging environment:** in the project, **create a second environment** named
    `staging`, set its **deploy branch to `staging`**, and add the **staging**
@@ -62,8 +63,9 @@ Repo: `sevenone-housekeeping-service`. It has `railway.toml`, so Railway runs
    `COOKIE_DOMAIN=staging.seven1solutions.com`, the 3 staging origins).
 5. **Custom domains:** in each environment's service → Settings → Networking →
    **Custom Domain**: add `api.seven1solutions.com` (prod) and
-   `api.staging.seven1solutions.com` (staging). Railway shows a **CNAME target**
-   for each — note them for Part C.
+   `api.staging.seven1solutions.com` (staging). If it asks for a **target port**,
+   enter **8080** (matches the `PORT` var from step 2). Railway shows a **CNAME
+   target** for each — note them for Part C.
 6. Deploys should go green (health check `/health`). If a deploy fails, check the
    logs — usually a missing/invalid `DATABASE_URL`.
 
