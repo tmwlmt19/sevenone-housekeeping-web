@@ -70,9 +70,10 @@ cloud DB (no local Postgres needed).
 ## Open / TODO
 
 - **Browser + automated tests** (Playwright E2E; Vitest for auth/role logic).
-- **Deploy**: Vercel for the three frontends; Railway custom domain for the API.
-  Requires a shared parent domain (`login./app./admin./api.<domain>`) with
-  `COOKIE_DOMAIN` + `COOKIE_SECURE=true`, and prod origins in `CORS_ORIGINS`.
+- **Deploy (test + prod)**: two isolated stacks, branch-based (`main`→prod,
+  `staging`→test), two separate domains for cookie isolation. Full runbook +
+  per-env config matrix in [environments.md](environments.md). Code is already
+  fully env-parametrized — infra/config only, no code changes.
 - **Deferred auth work:** rotating **refresh tokens** (currently 24h cookie,
   re-login on expiry) and **forgot-password** (needs email/reset flow).
 - **Polish:** route-level code-splitting (bundle > 500 kB advisory).
