@@ -12,7 +12,7 @@ Part of a four-app system (all separate repos):
 
 Auth is **cookie-based SSO**: this app has no login screen — unauthenticated
 users are redirected to the login app; API calls send the shared session cookie.
-See [docs/status.md](docs/status.md) for whole-system status.
+See [docs/status.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/housekeeping/status.md) for whole-system status.
 
 ## Getting started
 
@@ -39,15 +39,15 @@ CRUD, task board with assign/status, housekeeper "My Tasks", hotel settings, and
 account (password change) — all wired to the live API. Remaining: automated tests
 (Vitest/Playwright) and deploy. See:
 
-- [docs/status.md](docs/status.md) — **whole-system** status, open items, and how to resume.
-- [PLAN.md](PLAN.md) — requirements, API contract, role matrix, and build phases.
-- [docs/development.md](docs/development.md) — run it locally, scripts, env, dev
+- [docs/status.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/housekeeping/status.md) — **whole-system** status, open items, and how to resume.
+- [PLAN.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/housekeeping/frontend/plan.md) — requirements, API contract, role matrix, and build phases.
+- [docs/development.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/housekeeping/frontend/development.md) — run it locally, scripts, env, dev
   login, regenerating API types.
-- [docs/architecture.md](docs/architecture.md) — source tree, providers, auth,
+- [docs/architecture.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/housekeeping/frontend/architecture.md) — source tree, providers, auth,
   routing/guards, API layer, and conventions.
-- [docs/site-map.md](docs/site-map.md) — routes, per-role navigation, user
+- [docs/site-map.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/housekeeping/frontend/site-map.md) — routes, per-role navigation, user
   journeys, and the API calls behind each page.
-- [docs/ui-stack-comparison.md](docs/ui-stack-comparison.md) — component-library
+- [docs/ui-stack-comparison.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/decisions/ui-stack-comparison.md) — component-library
   options and recommendation.
-- [docs/hosting-comparison.md](docs/hosting-comparison.md) — hosting options and
+- [docs/hosting-comparison.md](https://github.com/tmwlmt19/sevenone-docs/blob/main/decisions/hosting-comparison.md) — hosting options and
   recommendation.
