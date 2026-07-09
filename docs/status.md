@@ -86,7 +86,9 @@ cloud DB (no local Postgres needed).
 
 ## Security reminders (pre-production)
 
-- Backend `.env` (live Neon creds) and the dev admin password are committed for
-  MVP convenience — rotate and gitignore before real data.
+- Backend `.env` is gitignored (not committed); config is 12-factor (env vars,
+  `DATABASE_URL` required so misconfig fails fast). The **dev admin password** is
+  documented in the service repo's `docs/local-development.md` (committed for MVP
+  convenience) — use unique per-env secrets and a real admin before go-live.
 - CSRF currently relies on `SameSite` + same-site subdomains; consider a
   double-submit token when hardening. Tighten CSP; audit deps.
