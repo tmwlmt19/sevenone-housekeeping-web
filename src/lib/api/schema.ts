@@ -116,6 +116,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hotels/provision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Provision Hotel
+         * @description Create a hotel and optionally bulk-import its rooms and staff, atomically.
+         *
+         *     All-or-nothing: if any row fails validation, nothing is committed — not even
+         *     the hotel. All row errors are collected and returned together (422) so the
+         *     caller can fix the whole file at once. Provisioned users share one temporary
+         *     password (returned once) and must change it on first login.
+         */
+        post: operations["provision_hotel_api_v1_hotels_provision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}": {
         parameters: {
             query?: never;
@@ -208,6 +233,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/rooms/{room_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Room Status
+         * @description Change only a room's status. Available to managers and admins; the
+         *     full add/rename/delete lifecycle is reserved for platform admins.
+         */
+        patch: operations["update_room_status_api_v1_hotels__hotel_id__rooms__room_id__status_patch"];
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}/tasks": {
         parameters: {
             query?: never;
@@ -280,6 +326,28 @@ export interface components {
             name: string;
             /** Address */
             address?: string | null;
+        };
+        /**
+         * HotelProvisionRequest
+         * @description Create a hotel and (optionally) bulk-import its rooms and staff in one
+         *     atomic operation. Both lists are optional; either or both may be empty.
+         */
+        HotelProvisionRequest: {
+            hotel: components["schemas"]["HotelCreate"];
+            /** Rooms */
+            rooms?: components["schemas"]["RoomCreate"][];
+            /** Users */
+            users?: components["schemas"]["UserProvision"][];
+        };
+        /** HotelProvisionResponse */
+        HotelProvisionResponse: {
+            hotel: components["schemas"]["HotelRead"];
+            /** Rooms Created */
+            rooms_created: number;
+            /** Users */
+            users: components["schemas"]["UserRead"][];
+            /** Temporary Password */
+            temporary_password: string;
         };
         /** HotelRead */
         HotelRead: {
@@ -373,6 +441,14 @@ export interface components {
          * @enum {string}
          */
         RoomStatus: "clean" | "dirty" | "in_progress" | "out_of_service";
+        /**
+         * RoomStatusUpdate
+         * @description Status-only update. Managers may change a room's status without the
+         *     full-edit (add/rename/delete) rights reserved for platform admins.
+         */
+        RoomStatusUpdate: {
+            status: components["schemas"]["RoomStatus"];
+        };
         /** RoomUpdate */
         RoomUpdate: {
             /** Room Number */
@@ -489,18 +565,12 @@ export interface components {
             name: string;
             role: components["schemas"]["UserRole"];
         };
-        /** UserRead */
-        UserRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Hotel Id
-             * Format: uuid
-             */
-            hotel_id: string;
+        /**
+         * UserProvision
+         * @description A staff row in a provisioning batch. No password: every provisioned user
+         *     gets the batch's shared temporary password and must change it on first login.
+         */
+        UserProvision: {
             /**
              * Email
              * Format: email
@@ -509,6 +579,26 @@ export interface components {
             /** Name */
             name: string;
             role: components["schemas"]["UserRole"];
+        };
+        /** UserRead */
+        UserRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Hotel Id */
+            hotel_id: string | null;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Name */
+            name: string;
+            role: components["schemas"]["UserRole"];
+            /** Must Change Password */
+            must_change_password: boolean;
             /**
              * Created At
              * Format: date-time
@@ -717,6 +807,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HotelRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provision_hotel_api_v1_hotels_provision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HotelProvisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HotelProvisionResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1112,6 +1235,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_room_status_api_v1_hotels__hotel_id__rooms__room_id__status_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+                room_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomStatusUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomRead"];
+                };
             };
             /** @description Validation Error */
             422: {

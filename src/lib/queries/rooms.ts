@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/lib/api/client'
-import type { RoomCreate, RoomUpdate } from '@/lib/api/types'
+import type { RoomCreate, RoomStatus, RoomUpdate } from '@/lib/api/types'
 import { ensureOk, unwrap } from '@/lib/api/unwrap'
 
 import { qk } from './keys'
@@ -50,6 +50,27 @@ export function useUpdateRoom() {
         await api.PUT('/api/v1/hotels/{hotel_id}/rooms/{room_id}', {
           params: { path: { hotel_id: hotelId, room_id: roomId } },
           body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.rooms(hotelId) }),
+  })
+}
+
+export function useUpdateRoomStatus() {
+  const hotelId = useHotelId()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      roomId,
+      status,
+    }: {
+      roomId: string
+      status: RoomStatus
+    }) =>
+      unwrap(
+        await api.PATCH('/api/v1/hotels/{hotel_id}/rooms/{room_id}/status', {
+          params: { path: { hotel_id: hotelId, room_id: roomId } },
+          body: { status },
         }),
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.rooms(hotelId) }),

@@ -35,8 +35,15 @@ export const router = createBrowserRouter([
                 path: 'rooms',
                 element: <RoomsPage />,
                 children: [
-                  { path: 'new', element: <RoomFormModal /> },
-                  { path: ':roomId', element: <RoomFormModal /> },
+                  // Adding/editing/removing rooms is admin-only; managers
+                  // change room status inline from the table.
+                  {
+                    element: <RequireRole allow={['admin']} />,
+                    children: [
+                      { path: 'new', element: <RoomFormModal /> },
+                      { path: ':roomId', element: <RoomFormModal /> },
+                    ],
+                  },
                 ],
               },
               {

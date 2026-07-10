@@ -33,7 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await api.GET('/api/v1/auth/me')
       if (!active) return
       if (data) {
-        setUser({ id: data.id, hotelId: data.hotel_id, role: data.role })
+        // hotel_id is nullable on the API (platform admins have none), but the
+        // web app is only used by hotel-scoped roles, which always have one.
+        setUser({ id: data.id, hotelId: data.hotel_id ?? '', role: data.role })
         setStatus('authed')
       } else {
         // A 401 already triggered a redirect to the login app in the client.
