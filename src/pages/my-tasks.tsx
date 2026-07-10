@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
@@ -20,6 +21,7 @@ const STATUS_ORDER: Record<TaskStatus, number> = {
 }
 
 export function MyTasksPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { data: tasks, isLoading } = useTasks({ assignedTo: user?.id })
   const { data: rooms } = useRooms()
@@ -34,7 +36,9 @@ export function MyTasksPage() {
       {
         onSuccess: () => toast.success(message),
         onError: (e) =>
-          toast.error(e instanceof ApiError ? e.message : 'Update failed'),
+          toast.error(
+            e instanceof ApiError ? e.message : t('common.updateFailed'),
+          ),
       },
     )
   }
@@ -45,13 +49,13 @@ export function MyTasksPage() {
 
   return (
     <div>
-      <PageHeader title="My Tasks" />
+      <PageHeader title={t('myTasks.title')} />
 
       {isLoading && <Skeleton className="h-40 w-full" />}
 
       {!isLoading && sorted.length === 0 && (
         <p className="text-muted-foreground py-12 text-center text-sm">
-          No tasks assigned to you right now.
+          {t('myTasks.none')}
         </p>
       )}
 
@@ -64,7 +68,7 @@ export function MyTasksPage() {
               <CardContent className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-lg font-semibold">
-                    Room {roomLabel(task.room_id)}
+                    {t('myTasks.room', { label: roomLabel(task.room_id) })}
                   </span>
                   <PriorityBadge priority={task.priority} />
                 </div>
@@ -72,7 +76,7 @@ export function MyTasksPage() {
                   <TaskStatusBadge status={task.status} />
                   {task.due_date && (
                     <span className="text-muted-foreground text-xs">
-                      Due {formatDate(task.due_date)}
+                      {t('myTasks.due', { date: formatDate(task.due_date) })}
                     </span>
                   )}
                 </div>
@@ -85,20 +89,28 @@ export function MyTasksPage() {
                         className="flex-1"
                         disabled={isUpdating}
                         onClick={() =>
-                          changeStatus(task, 'completed', 'Task completed')
+                          changeStatus(
+                            task,
+                            'completed',
+                            t('myTasks.taskCompleted'),
+                          )
                         }
                       >
-                        Mark complete
+                        {t('myTasks.markComplete')}
                       </Button>
                     ) : (
                       <Button
                         className="flex-1"
                         disabled={isUpdating}
                         onClick={() =>
-                          changeStatus(task, 'in_progress', 'Started')
+                          changeStatus(
+                            task,
+                            'in_progress',
+                            t('myTasks.started'),
+                          )
                         }
                       >
-                        Start
+                        {t('myTasks.start')}
                       </Button>
                     )}
                   </div>

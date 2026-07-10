@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -24,23 +25,21 @@ import {
   type TaskUpdate,
 } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { fromDateInput, humanize, toDateInput } from '@/lib/format'
+import { fromDateInput, toDateInput } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
 import { useCreateTask, useTasks, useUpdateTask } from '@/lib/queries/tasks'
 
 const UNASSIGNED = 'unassigned'
 
-const schema = z.object({
-  room_id: z.string().min(1, 'Select a room'),
-  assigned_to: z.string(),
-  status: z.enum(['pending', 'assigned', 'in_progress', 'completed']),
-  priority: z.enum(['low', 'normal', 'urgent']),
-  notes: z.string(),
-  due_date: z.string(),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = {
+  room_id: string
+  assigned_to: string
+  status: 'pending' | 'assigned' | 'in_progress' | 'completed'
+  priority: 'low' | 'normal' | 'urgent'
+  notes: string
+  due_date: string
+}
 
 const EMPTY: FormValues = {
   room_id: '',
@@ -52,10 +51,24 @@ const EMPTY: FormValues = {
 }
 
 export function TaskFormModal() {
+  const { t } = useTranslation()
   const { taskId } = useParams()
   const isEdit = Boolean(taskId)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        room_id: z.string().min(1, t('taskForm.selectRoom')),
+        assigned_to: z.string(),
+        status: z.enum(['pending', 'assigned', 'in_progress', 'completed']),
+        priority: z.enum(['low', 'normal', 'urgent']),
+        notes: z.string(),
+        due_date: z.string(),
+      }),
+    [t],
+  )
   // Prefill the room when arriving from the "room became dirty" prompt.
   const presetRoomId = searchParams.get('room') ?? ''
 
@@ -89,9 +102,9 @@ export function TaskFormModal() {
 
   if (isEdit && tasks && !task) {
     return (
-      <RouteModal title="Task not found" backTo="/tasks">
+      <RouteModal title={t('taskForm.notFoundTitle')} backTo="/tasks">
         <p className="text-muted-foreground text-sm">
-          This task no longer exists.
+          {t('taskForm.notFoundBody')}
         </p>
       </RouteModal>
     )
@@ -109,11 +122,15 @@ export function TaskFormModal() {
     }
     const handlers = {
       onSuccess: () => {
-        toast.success(isEdit ? 'Task updated' : 'Task created')
+        toast.success(
+          isEdit ? t('taskForm.taskUpdated') : t('taskForm.taskCreated'),
+        )
         navigate('/tasks')
       },
       onError: (e: unknown) =>
-        toast.error(e instanceof ApiError ? e.message : 'Something went wrong'),
+        toast.error(
+          e instanceof ApiError ? e.message : t('common.somethingWentWrong'),
+        ),
     }
     if (isEdit && taskId) {
       updateTask.mutate({ taskId, body }, handlers)
@@ -123,24 +140,30 @@ export function TaskFormModal() {
   }
 
   return (
-    <RouteModal title={isEdit ? 'Edit task' : 'New task'} backTo="/tasks">
+    <RouteModal
+      title={isEdit ? t('taskForm.editTitle') : t('taskForm.newTitle')}
+      backTo="/tasks"
+    >
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-4"
       >
-        <Field label="Room" error={form.formState.errors.room_id?.message}>
+        <Field
+          label={t('taskForm.room')}
+          error={form.formState.errors.room_id?.message}
+        >
           <Controller
             control={form.control}
             name="room_id"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a room" />
+                  <SelectValue placeholder={t('taskForm.selectRoom')} />
                 </SelectTrigger>
                 <SelectContent>
                   {rooms?.map((r) => (
                     <SelectItem key={r.id} value={r.id}>
-                      Room {r.room_number}
+                      {t('taskForm.roomOption', { number: r.room_number })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -149,7 +172,7 @@ export function TaskFormModal() {
           />
         </Field>
 
-        <Field label="Assignee">
+        <Field label={t('taskForm.assignee')}>
           <Controller
             control={form.control}
             name="assigned_to"
@@ -159,7 +182,9 @@ export function TaskFormModal() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+                  <SelectItem value={UNASSIGNED}>
+                    {t('common.unassigned')}
+                  </SelectItem>
                   {staff?.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -172,7 +197,7 @@ export function TaskFormModal() {
         </Field>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Status">
+          <Field label={t('taskForm.status')}>
             <Controller
               control={form.control}
               name="status"
@@ -184,7 +209,7 @@ export function TaskFormModal() {
                   <SelectContent>
                     {TASK_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {humanize(s)}
+                        {t(`enums.taskStatus.${s}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -192,7 +217,7 @@ export function TaskFormModal() {
               )}
             />
           </Field>
-          <Field label="Priority">
+          <Field label={t('taskForm.priority')}>
             <Controller
               control={form.control}
               name="priority"
@@ -204,7 +229,7 @@ export function TaskFormModal() {
                   <SelectContent>
                     {TASK_PRIORITIES.map((p) => (
                       <SelectItem key={p} value={p}>
-                        {humanize(p)}
+                        {t(`enums.priority.${p}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -214,11 +239,11 @@ export function TaskFormModal() {
           </Field>
         </div>
 
-        <Field label="Due date" htmlFor="due_date">
+        <Field label={t('taskForm.dueDate')} htmlFor="due_date">
           <Input id="due_date" type="date" {...form.register('due_date')} />
         </Field>
 
-        <Field label="Notes" htmlFor="notes">
+        <Field label={t('taskForm.notes')} htmlFor="notes">
           <Textarea id="notes" rows={3} {...form.register('notes')} />
         </Field>
 
@@ -228,10 +253,10 @@ export function TaskFormModal() {
             variant="outline"
             onClick={() => navigate('/tasks')}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isPending}>
-            {isPending ? 'Saving…' : 'Save'}
+            {isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       </form>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { PriorityBadge } from '@/components/status-badge'
@@ -11,22 +12,25 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, roomLabel, assigneeName }: TaskCardProps) {
+  const { t } = useTranslation()
   return (
     <Link
       to={`/tasks/${task.id}`}
       className="bg-card hover:bg-accent/50 block rounded-md border p-3 transition-colors"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium">Room {roomLabel}</span>
+        <span className="font-medium">
+          {t('taskCard.room', { label: roomLabel })}
+        </span>
         <PriorityBadge priority={task.priority} />
       </div>
       <p className="text-muted-foreground mt-1 text-sm">
-        {assigneeName ?? 'Unassigned'}
+        {assigneeName ?? t('common.unassigned')}
       </p>
       {task.notes && <p className="mt-1 line-clamp-2 text-sm">{task.notes}</p>}
       {task.due_date && (
         <p className="text-muted-foreground mt-2 text-xs">
-          Due {formatDate(task.due_date)}
+          {t('taskCard.due', { date: formatDate(task.due_date) })}
         </p>
       )}
     </Link>

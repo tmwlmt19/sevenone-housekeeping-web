@@ -1,6 +1,7 @@
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/components/ui/badge'
 import type { RoomStatus, TaskPriority, TaskStatus } from '@/lib/api/types'
-import { humanize } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 const ROOM_STATUS_CLASS: Record<RoomStatus, string> = {
@@ -43,27 +44,30 @@ function StatusBadge({
 }
 
 export function RoomStatusBadge({ status }: { status: RoomStatus }) {
+  const { t } = useTranslation()
   return (
     <StatusBadge
-      label={humanize(status)}
+      label={t(`enums.roomStatus.${status}`)}
       className={ROOM_STATUS_CLASS[status]}
     />
   )
 }
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
+  const { t } = useTranslation()
   return (
     <StatusBadge
-      label={humanize(status)}
+      label={t(`enums.taskStatus.${status}`)}
       className={TASK_STATUS_CLASS[status]}
     />
   )
 }
 
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {
+  const { t } = useTranslation()
   return (
     <StatusBadge
-      label={humanize(priority)}
+      label={t(`enums.priority.${priority}`)}
       className={PRIORITY_CLASS[priority]}
     />
   )

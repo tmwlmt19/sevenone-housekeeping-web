@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -18,25 +20,38 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import type { UserRole } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { humanize } from '@/lib/format'
 import { useFileRequest } from '@/lib/queries/access-requests'
 
 // Managers can't add staff directly; they file a request for a platform admin
 // to approve. No password here — it's generated when the admin approves.
 const HOTEL_ROLES: UserRole[] = ['manager', 'housekeeper']
 
-const schema = z.object({
-  email: z.string().trim().email('Enter a valid email'),
-  name: z.string().trim().min(1, 'Required').max(255, 'Max 255 characters'),
-  role: z.enum(['manager', 'housekeeper']),
-  note: z.string().trim().max(1000, 'Max 1000 characters'),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = {
+  email: string
+  name: string
+  role: 'manager' | 'housekeeper'
+  note: string
+}
 
 export function StaffRequestModal() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const fileRequest = useFileRequest()
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().trim().email(t('staffRequest.validation.validEmail')),
+        name: z
+          .string()
+          .trim()
+          .min(1, t('staffRequest.validation.required'))
+          .max(255, t('staffRequest.validation.max255')),
+        role: z.enum(['manager', 'housekeeper']),
+        note: z.string().trim().max(1000, t('staffRequest.validation.max1000')),
+      }),
+    [t],
+  )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -57,7 +72,7 @@ export function StaffRequestModal() {
       },
       {
         onSuccess: () => {
-          toast.success('Request submitted for approval')
+          toast.success(t('staffRequest.requestSubmitted'))
           navigate('/staff')
         },
         onError: (e: unknown) => {
@@ -65,7 +80,9 @@ export function StaffRequestModal() {
             form.setError('email', { message: e.message })
           } else {
             toast.error(
-              e instanceof ApiError ? e.message : 'Something went wrong',
+              e instanceof ApiError
+                ? e.message
+                : t('common.somethingWentWrong'),
             )
           }
         },
@@ -74,26 +91,29 @@ export function StaffRequestModal() {
   }
 
   return (
-    <RouteModal title="Request new staff member" backTo="/staff">
+    <RouteModal title={t('staffRequest.title')} backTo="/staff">
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-4"
       >
         <Field
-          label="Name"
+          label={t('staffRequest.name')}
           htmlFor="name"
           error={form.formState.errors.name?.message}
         >
           <Input id="name" {...form.register('name')} />
         </Field>
         <Field
-          label="Email"
+          label={t('staffRequest.email')}
           htmlFor="email"
           error={form.formState.errors.email?.message}
         >
           <Input id="email" type="email" {...form.register('email')} />
         </Field>
-        <Field label="Role" error={form.formState.errors.role?.message}>
+        <Field
+          label={t('staffRequest.role')}
+          error={form.formState.errors.role?.message}
+        >
           <Controller
             control={form.control}
             name="role"
@@ -105,7 +125,7 @@ export function StaffRequestModal() {
                 <SelectContent>
                   {HOTEL_ROLES.map((r) => (
                     <SelectItem key={r} value={r}>
-                      {humanize(r)}
+                      {t(`enums.role.${r}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -114,13 +134,13 @@ export function StaffRequestModal() {
           />
         </Field>
         <Field
-          label="Note (optional)"
+          label={t('staffRequest.note')}
           htmlFor="note"
           error={form.formState.errors.note?.message}
         >
           <Textarea
             id="note"
-            placeholder="Context for the admin"
+            placeholder={t('staffRequest.notePlaceholder')}
             {...form.register('note')}
           />
         </Field>
@@ -130,10 +150,12 @@ export function StaffRequestModal() {
             variant="outline"
             onClick={() => navigate('/staff')}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={fileRequest.isPending}>
-            {fileRequest.isPending ? 'Submitting…' : 'Submit request'}
+            {fileRequest.isPending
+              ? t('common.submitting')
+              : t('common.submitRequest')}
           </Button>
         </div>
       </form>

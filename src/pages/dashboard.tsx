@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '@/components/page-header'
 import {
@@ -21,6 +22,7 @@ const PRIORITY_RANK: Record<TaskPriority, number> = {
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation()
   const { data: rooms, isLoading: roomsLoading } = useRooms()
   const { data: tasks, isLoading: tasksLoading } = useTasks()
   const { data: staff } = useStaff()
@@ -38,18 +40,21 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Dashboard" description="Today at a glance." />
+      <PageHeader
+        title={t('dashboard.title')}
+        description={t('dashboard.subtitle')}
+      />
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">
-            Rooms{' '}
+            {t('dashboard.rooms')}{' '}
             {rooms && (
               <span className="text-muted-foreground">({rooms.length})</span>
             )}
           </h2>
           <Link to="/rooms" className="text-muted-foreground text-sm underline">
-            Manage rooms
+            {t('dashboard.manageRooms')}
           </Link>
         </div>
 
@@ -58,9 +63,9 @@ export function DashboardPage() {
         ) : sortedRooms.length === 0 ? (
           <Card>
             <CardContent className="text-muted-foreground py-8 text-center text-sm">
-              No rooms yet.{' '}
+              {t('dashboard.noRooms')}{' '}
               <Link to="/rooms/new" className="underline">
-                Add your first room
+                {t('dashboard.addFirstRoom')}
               </Link>
               .
             </CardContent>
@@ -79,7 +84,7 @@ export function DashboardPage() {
                   </span>
                   {room.floor != null && (
                     <span className="text-muted-foreground text-xs">
-                      Fl {room.floor}
+                      {t('dashboard.floorShort', { n: String(room.floor) })}
                     </span>
                   )}
                 </div>
@@ -93,7 +98,7 @@ export function DashboardPage() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">
-            Open tasks{' '}
+            {t('dashboard.openTasks')}{' '}
             {tasks && (
               <span className="text-muted-foreground">
                 ({openTasks.length})
@@ -101,7 +106,7 @@ export function DashboardPage() {
             )}
           </h2>
           <Link to="/tasks" className="text-muted-foreground text-sm underline">
-            View board
+            {t('dashboard.viewBoard')}
           </Link>
         </div>
 
@@ -112,7 +117,7 @@ export function DashboardPage() {
             <CardContent className="p-0">
               {openTasks.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center text-sm">
-                  No open tasks. Everything's handled.
+                  {t('dashboard.allHandled')}
                 </p>
               ) : (
                 <ul className="divide-y">
@@ -146,6 +151,7 @@ function OpenTaskRow({
   roomLabel: string
   assignee: string | null
 }) {
+  const { t } = useTranslation()
   return (
     <li>
       <Link
@@ -153,10 +159,13 @@ function OpenTaskRow({
         className="hover:bg-accent/50 flex items-center justify-between gap-3 px-4 py-3"
       >
         <div className="flex min-w-0 flex-col">
-          <span className="font-medium">Room {roomLabel}</span>
+          <span className="font-medium">
+            {t('dashboard.room', { label: roomLabel })}
+          </span>
           <span className="text-muted-foreground truncate text-sm">
-            {assignee ?? 'Unassigned'}
-            {task.due_date && ` · Due ${formatDate(task.due_date)}`}
+            {assignee ?? t('common.unassigned')}
+            {task.due_date &&
+              ` · ${t('dashboard.due', { date: formatDate(task.due_date) })}`}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">

@@ -1,7 +1,8 @@
+import { useTranslation } from 'react-i18next'
+
 import { Skeleton } from '@/components/ui/skeleton'
 import { TASK_STATUSES } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { humanize } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
 import { useTasks } from '@/lib/queries/tasks'
@@ -13,6 +14,7 @@ interface TasksBoardProps {
 }
 
 export function TasksBoard({ assignedTo }: TasksBoardProps) {
+  const { t } = useTranslation()
   const { data: tasks, isLoading, isError, error } = useTasks({ assignedTo })
   const { data: rooms } = useRooms()
   const { data: staff } = useStaff()
@@ -25,7 +27,9 @@ export function TasksBoard({ assignedTo }: TasksBoardProps) {
   if (isError) {
     return (
       <p className="text-destructive">
-        {error instanceof ApiError ? error.message : 'Failed to load tasks'}
+        {error instanceof ApiError
+          ? error.message
+          : t('tasksBoard.failedToLoad')}
       </p>
     )
   }
@@ -37,7 +41,9 @@ export function TasksBoard({ assignedTo }: TasksBoardProps) {
         return (
           <div key={status} className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold">{humanize(status)}</h2>
+              <h2 className="text-sm font-semibold">
+                {t(`enums.taskStatus.${status}`)}
+              </h2>
               {!isLoading && (
                 <span className="text-muted-foreground text-xs">
                   {column.length}
@@ -49,7 +55,7 @@ export function TasksBoard({ assignedTo }: TasksBoardProps) {
 
             {!isLoading && column.length === 0 && (
               <p className="text-muted-foreground rounded-md border border-dashed p-3 text-center text-xs">
-                None
+                {t('tasksBoard.none')}
               </p>
             )}
 

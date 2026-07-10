@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/auth-context'
@@ -7,20 +8,21 @@ import { Button } from '@/components/ui/button'
 import { RoomsTable } from '@/features/rooms/rooms-table'
 
 export function RoomsPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
 
   return (
     <div>
       <PageHeader
-        title="Rooms"
-        description="Manage the rooms in your hotel."
+        title={t('roomsPage.title')}
+        description={t('roomsPage.subtitle')}
         action={
           isManager ? (
             <Button asChild>
               <Link to="/rooms/request">
                 <Plus className="size-4" />
-                Request room
+                {t('roomsPage.requestRoom')}
               </Link>
             </Button>
           ) : undefined

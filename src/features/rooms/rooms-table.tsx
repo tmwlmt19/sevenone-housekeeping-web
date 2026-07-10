@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
@@ -24,10 +25,10 @@ import {
 } from '@/components/ui/table'
 import { ROOM_STATUSES, type Room, type RoomStatus } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { humanize } from '@/lib/format'
 import { useRooms, useUpdateRoomStatus } from '@/lib/queries/rooms'
 
 function RoomStatusSelect({ room }: { room: Room }) {
+  const { t } = useTranslation()
   const updateStatus = useUpdateRoomStatus()
   return (
     <Select
@@ -39,19 +40,24 @@ function RoomStatusSelect({ room }: { room: Room }) {
           {
             onError: (e) =>
               toast.error(
-                e instanceof ApiError ? e.message : 'Failed to update status',
+                e instanceof ApiError
+                  ? e.message
+                  : t('roomsTable.failedUpdateStatus'),
               ),
           },
         )
       }
     >
-      <SelectTrigger className="h-8 w-40" aria-label="Room status">
+      <SelectTrigger
+        className="h-8 w-40"
+        aria-label={t('roomsTable.roomStatusAria')}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {ROOM_STATUSES.map((s) => (
           <SelectItem key={s} value={s}>
-            {humanize(s)}
+            {t(`enums.roomStatus.${s}`)}
           </SelectItem>
         ))}
       </SelectContent>
@@ -60,6 +66,7 @@ function RoomStatusSelect({ room }: { room: Room }) {
 }
 
 export function RoomsTable() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
   const isAdmin = user?.role === 'admin'
@@ -76,12 +83,14 @@ export function RoomsTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Room</TableHead>
-              <TableHead>Floor</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t('roomsTable.room')}</TableHead>
+              <TableHead>{t('roomsTable.floor')}</TableHead>
+              <TableHead>{t('roomsTable.type')}</TableHead>
+              <TableHead>{t('roomsTable.status')}</TableHead>
               {isManager && (
-                <TableHead className="w-24 text-right">Actions</TableHead>
+                <TableHead className="w-24 text-right">
+                  {t('common.actions')}
+                </TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -100,7 +109,7 @@ export function RoomsTable() {
                 <TableCell colSpan={colCount} className="text-destructive">
                   {error instanceof ApiError
                     ? error.message
-                    : 'Failed to load rooms'}
+                    : t('roomsTable.failedToLoad')}
                 </TableCell>
               </TableRow>
             )}
@@ -111,7 +120,7 @@ export function RoomsTable() {
                   colSpan={colCount}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No rooms yet.
+                  {t('roomsTable.noRooms')}
                 </TableCell>
               </TableRow>
             )}
@@ -135,7 +144,7 @@ export function RoomsTable() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label="Request removal"
+                      aria-label={t('roomsTable.requestRemoval')}
                       onClick={() => setToRemove(room)}
                     >
                       <Trash2 className="size-4" />
@@ -151,7 +160,11 @@ export function RoomsTable() {
       <RequestRemovalDialog
         resource="room"
         targetId={toRemove?.id ?? null}
-        targetLabel={toRemove ? `room ${toRemove.room_number}` : ''}
+        targetLabel={
+          toRemove
+            ? t('removalDialog.targetRoom', { number: toRemove.room_number })
+            : ''
+        }
         onClose={() => setToRemove(null)}
       />
     </>

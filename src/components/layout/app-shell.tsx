@@ -10,16 +10,26 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '@/auth/auth-context'
 import type { Role } from '@/auth/types'
+import { PreferencesMenu } from '@/components/preferences-menu'
 import { Button } from '@/components/ui/button'
 import { useHotel } from '@/lib/queries/hotel'
 import { cn } from '@/lib/utils'
 
+type NavLabelKey =
+  | 'nav.dashboard'
+  | 'nav.rooms'
+  | 'nav.staff'
+  | 'nav.tasks'
+  | 'nav.requests'
+  | 'nav.settings'
+
 interface NavItem {
   to: string
-  label: string
+  labelKey: NavLabelKey
   icon: LucideIcon
   roles: Role[]
 }
@@ -27,33 +37,44 @@ interface NavItem {
 const NAV_ITEMS: readonly NavItem[] = [
   {
     to: '/dashboard',
-    label: 'Dashboard',
+    labelKey: 'nav.dashboard',
     icon: LayoutDashboard,
     roles: ['admin', 'manager'],
   },
   {
     to: '/rooms',
-    label: 'Rooms',
+    labelKey: 'nav.rooms',
     icon: BedDouble,
     roles: ['admin', 'manager'],
   },
-  { to: '/staff', label: 'Staff', icon: Users, roles: ['admin', 'manager'] },
+  {
+    to: '/staff',
+    labelKey: 'nav.staff',
+    icon: Users,
+    roles: ['admin', 'manager'],
+  },
   {
     to: '/tasks',
-    label: 'Tasks',
+    labelKey: 'nav.tasks',
     icon: ClipboardList,
     roles: ['admin', 'manager'],
   },
-  { to: '/requests', label: 'Requests', icon: Inbox, roles: ['manager'] },
+  {
+    to: '/requests',
+    labelKey: 'nav.requests',
+    icon: Inbox,
+    roles: ['manager'],
+  },
   {
     to: '/settings/hotel',
-    label: 'Settings',
+    labelKey: 'nav.settings',
     icon: Settings,
     roles: ['admin'],
   },
 ]
 
 export function AppShell() {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const { data: hotel } = useHotel()
 
@@ -66,7 +87,7 @@ export function AppShell() {
       <aside className="bg-sidebar text-sidebar-foreground flex w-60 flex-col border-r">
         <div className="px-5 py-4 text-lg font-semibold">SevenOne</div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
-          {items.map(({ to, label, icon: Icon }) => (
+          {items.map(({ to, labelKey, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -80,7 +101,7 @@ export function AppShell() {
               }
             >
               <Icon className="size-4" />
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
         </nav>
@@ -88,18 +109,19 @@ export function AppShell() {
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b px-6">
           <span className="text-sm font-medium">
-            {hotel?.name ?? 'Housekeeping'}
+            {hotel?.name ?? t('nav.housekeeping')}
           </span>
           <div className="flex items-center gap-1">
+            <PreferencesMenu />
             <Button asChild variant="ghost" size="sm">
               <Link to="/account">
                 <UserCircle className="size-4" />
-                Account
+                {t('nav.account')}
               </Link>
             </Button>
             <Button variant="ghost" size="sm" onClick={() => logout()}>
               <LogOut className="size-4" />
-              Logout
+              {t('nav.logout')}
             </Button>
           </div>
         </header>

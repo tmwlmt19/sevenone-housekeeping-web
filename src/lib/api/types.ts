@@ -16,6 +16,10 @@ export type Staff = Schemas['UserRead']
 export type StaffUpdate = Schemas['UserUpdate']
 export type UserRole = Schemas['UserRole']
 
+// UI preferences (persisted per-user).
+export type Theme = Schemas['Theme']
+export type Language = Schemas['Language']
+
 // Access requests (manager → admin approval queue).
 export type AccessRequest = Schemas['AccessRequestRead']
 export type AccessRequestCreate = Schemas['AccessRequestCreate']

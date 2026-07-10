@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,7 @@ export function RequestRemovalDialog({
   targetLabel,
   onClose,
 }: Props) {
+  const { t } = useTranslation()
   const [note, setNote] = useState('')
   const fileRequest = useFileRequest()
 
@@ -45,12 +47,14 @@ export function RequestRemovalDialog({
       },
       {
         onSuccess: () => {
-          toast.success('Removal request submitted for approval')
+          toast.success(t('removalDialog.submitted'))
           setNote('')
           onClose()
         },
         onError: (e) =>
-          toast.error(e instanceof ApiError ? e.message : 'Something went wrong'),
+          toast.error(
+            e instanceof ApiError ? e.message : t('common.somethingWentWrong'),
+          ),
       },
     )
   }
@@ -67,14 +71,13 @@ export function RequestRemovalDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Request removal</DialogTitle>
+          <DialogTitle>{t('removalDialog.title')}</DialogTitle>
           <DialogDescription>
-            Ask a platform admin to remove {targetLabel}. This doesn't remove it
-            yet — an admin approves the request first.
+            {t('removalDialog.description', { target: targetLabel })}
           </DialogDescription>
         </DialogHeader>
         <Textarea
-          placeholder="Reason (optional)"
+          placeholder={t('removalDialog.reasonPlaceholder')}
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
@@ -84,10 +87,12 @@ export function RequestRemovalDialog({
             onClick={onClose}
             disabled={fileRequest.isPending}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={submit} disabled={fileRequest.isPending}>
-            {fileRequest.isPending ? 'Submitting…' : 'Submit request'}
+            {fileRequest.isPending
+              ? t('common.submitting')
+              : t('common.submitRequest')}
           </Button>
         </DialogFooter>
       </DialogContent>

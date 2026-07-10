@@ -72,6 +72,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update My Preferences
+         * @description Update the authenticated user's own UI preferences (theme, language).
+         */
+        patch: operations["update_my_preferences_api_v1_auth_me_preferences_patch"];
+        trace?: never;
+    };
     "/api/v1/auth/me/password": {
         parameters: {
             query?: never;
@@ -783,6 +803,8 @@ export interface components {
             role: components["schemas"]["UserRole"];
             /** Must Change Password */
             must_change_password: boolean;
+            theme: components["schemas"]["Theme"];
+            preferred_language: components["schemas"]["Language"];
             /**
              * Created At
              * Format: date-time
@@ -799,6 +821,21 @@ export interface components {
          * @enum {string}
          */
         UserRole: "admin" | "manager" | "housekeeper";
+        /**
+         * Theme
+         * @enum {string}
+         */
+        Theme: "light" | "dark" | "system";
+        /**
+         * Language
+         * @enum {string}
+         */
+        Language: "en" | "es";
+        /** PreferencesUpdate */
+        PreferencesUpdate: {
+            theme?: components["schemas"]["Theme"] | null;
+            preferred_language?: components["schemas"]["Language"] | null;
+        };
         /** UserUpdate */
         UserUpdate: {
             /** Email */
@@ -916,6 +953,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
+                };
+            };
+        };
+    };
+    update_my_preferences_api_v1_auth_me_preferences_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

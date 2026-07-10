@@ -1,5 +1,6 @@
 import { UserMinus } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '@/auth/auth-context'
 import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
@@ -16,10 +17,10 @@ import {
 } from '@/components/ui/table'
 import type { Staff } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { humanize } from '@/lib/format'
 import { useStaff } from '@/lib/queries/staff'
 
 export function StaffTable() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
   const { data: staff, isLoading, isError, error } = useStaff()
@@ -33,11 +34,13 @@ export function StaffTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>{t('staffTable.name')}</TableHead>
+              <TableHead>{t('staffTable.email')}</TableHead>
+              <TableHead>{t('staffTable.role')}</TableHead>
               {isManager && (
-                <TableHead className="w-24 text-right">Actions</TableHead>
+                <TableHead className="w-24 text-right">
+                  {t('common.actions')}
+                </TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -56,7 +59,7 @@ export function StaffTable() {
                 <TableCell colSpan={colCount} className="text-destructive">
                   {error instanceof ApiError
                     ? error.message
-                    : 'Failed to load staff'}
+                    : t('staffTable.failedToLoad')}
                 </TableCell>
               </TableRow>
             )}
@@ -67,7 +70,7 @@ export function StaffTable() {
                   colSpan={colCount}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No staff yet.
+                  {t('staffTable.noStaff')}
                 </TableCell>
               </TableRow>
             )}
@@ -77,7 +80,9 @@ export function StaffTable() {
                 <TableCell className="font-medium">{member.name}</TableCell>
                 <TableCell>{member.email}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{humanize(member.role)}</Badge>
+                  <Badge variant="secondary">
+                    {t(`enums.role.${member.role}`)}
+                  </Badge>
                 </TableCell>
                 {isManager && (
                   <TableCell className="text-right">
@@ -85,7 +90,7 @@ export function StaffTable() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="Request removal"
+                        aria-label={t('staffTable.requestRemoval')}
                         onClick={() => setToRemove(member)}
                       >
                         <UserMinus className="size-4" />

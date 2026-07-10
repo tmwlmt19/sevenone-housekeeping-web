@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { PageHeader } from '@/components/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,7 +17,6 @@ import type {
   RoomAddPayload,
   StaffAddPayload,
 } from '@/lib/api/types'
-import { humanize } from '@/lib/format'
 import { useMyRequests } from '@/lib/queries/access-requests'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
@@ -30,6 +31,7 @@ const STATUS_VARIANT: Record<
 }
 
 export function RequestsPage() {
+  const { t } = useTranslation()
   const { data: requests, isLoading } = useMyRequests()
   const { data: staff } = useStaff()
   const { data: rooms } = useRooms()
@@ -38,27 +40,33 @@ export function RequestsPage() {
     if (req.kind === 'add') {
       if (req.resource === 'staff') {
         const p = req.payload as unknown as StaffAddPayload | null
-        return p ? `${p.name} · ${p.email} · ${humanize(p.role)}` : 'New staff'
+        return p
+          ? `${p.name} · ${p.email} · ${t(`enums.role.${p.role}`)}`
+          : t('requests.newStaff')
       }
       const p = req.payload as unknown as RoomAddPayload | null
       return p
-        ? `Room ${p.room_number}${p.room_type ? ` · ${p.room_type}` : ''}`
-        : 'New room'
+        ? `${t('requests.room', { number: p.room_number })}${p.room_type ? ` · ${p.room_type}` : ''}`
+        : t('requests.newRoom')
     }
     // remove — resolve the target's current label if we still have it
     if (req.resource === 'staff') {
-      const t = staff?.find((s) => s.id === req.target_id)
-      return t ? `${t.name} · ${t.email}` : 'Staff member'
+      const member = staff?.find((s) => s.id === req.target_id)
+      return member
+        ? `${member.name} · ${member.email}`
+        : t('requests.staffMember')
     }
-    const t = rooms?.find((r) => r.id === req.target_id)
-    return t ? `Room ${t.room_number}` : 'Room'
+    const room = rooms?.find((r) => r.id === req.target_id)
+    return room
+      ? t('requests.room', { number: room.room_number })
+      : t('requests.roomWord')
   }
 
   return (
     <div>
       <PageHeader
-        title="My requests"
-        description="Staff and room changes you've asked an admin to approve."
+        title={t('requests.title')}
+        description={t('requests.subtitle')}
       />
       {isLoading ? (
         <Skeleton className="h-32 w-full" />
@@ -67,10 +75,10 @@ export function RequestsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Request</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Admin note</TableHead>
+                <TableHead>{t('requests.request')}</TableHead>
+                <TableHead>{t('requests.details')}</TableHead>
+                <TableHead>{t('requests.status')}</TableHead>
+                <TableHead>{t('requests.adminNote')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,19 +88,22 @@ export function RequestsPage() {
                     colSpan={4}
                     className="text-muted-foreground py-8 text-center"
                   >
-                    You haven't made any requests yet.
+                    {t('requests.empty')}
                   </TableCell>
                 </TableRow>
               )}
               {requests?.map((req) => (
                 <TableRow key={req.id}>
-                  <TableCell className="font-medium capitalize">
-                    {humanize(req.kind)} {req.resource}
+                  <TableCell className="font-medium">
+                    {t('requests.kindResource', {
+                      kind: t(`enums.requestKind.${req.kind}`),
+                      resource: t(`enums.resource.${req.resource}`),
+                    })}
                   </TableCell>
                   <TableCell>{summarize(req)}</TableCell>
                   <TableCell>
                     <Badge variant={STATUS_VARIANT[req.status]}>
-                      {humanize(req.status)}
+                      {t(`enums.requestStatus.${req.status}`)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
