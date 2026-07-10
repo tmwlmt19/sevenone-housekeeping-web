@@ -2,14 +2,15 @@ import { createBrowserRouter } from 'react-router-dom'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { MobileShell } from '@/components/layout/mobile-shell'
-import { RoomFormModal } from '@/features/rooms/room-form-modal'
-import { StaffFormModal } from '@/features/staff/staff-form-modal'
+import { RoomRequestModal } from '@/features/rooms/room-request-modal'
+import { StaffRequestModal } from '@/features/staff/staff-request-modal'
 import { TaskFormModal } from '@/features/tasks/task-form-modal'
 import { AccountPage } from '@/pages/account'
 import { DashboardPage } from '@/pages/dashboard'
 import { HotelSettingsPage } from '@/pages/hotel-settings'
 import { MyTasksPage } from '@/pages/my-tasks'
 import { NotFoundPage } from '@/pages/not-found'
+import { RequestsPage } from '@/pages/requests'
 import { RoomsPage } from '@/pages/rooms'
 import { StaffPage } from '@/pages/staff'
 import { TasksPage } from '@/pages/tasks'
@@ -35,13 +36,12 @@ export const router = createBrowserRouter([
                 path: 'rooms',
                 element: <RoomsPage />,
                 children: [
-                  // Adding/editing/removing rooms is admin-only; managers
-                  // change room status inline from the table.
+                  // Managers change room status inline and can request an add;
+                  // approving the add is a platform-admin action in the console.
                   {
-                    element: <RequireRole allow={['admin']} />,
+                    element: <RequireRole allow={['manager']} />,
                     children: [
-                      { path: 'new', element: <RoomFormModal /> },
-                      { path: ':roomId', element: <RoomFormModal /> },
+                      { path: 'request', element: <RoomRequestModal /> },
                     ],
                   },
                 ],
@@ -50,15 +50,20 @@ export const router = createBrowserRouter([
                 path: 'staff',
                 element: <StaffPage />,
                 children: [
-                  // Creating/editing staff is admin-only.
+                  // Managers can request a staff add; approving it is a
+                  // platform-admin action in the console.
                   {
-                    element: <RequireRole allow={['admin']} />,
+                    element: <RequireRole allow={['manager']} />,
                     children: [
-                      { path: 'new', element: <StaffFormModal /> },
-                      { path: ':userId', element: <StaffFormModal /> },
+                      { path: 'request', element: <StaffRequestModal /> },
                     ],
                   },
                 ],
+              },
+              // A manager's own filed requests and their status.
+              {
+                element: <RequireRole allow={['manager']} />,
+                children: [{ path: 'requests', element: <RequestsPage /> }],
               },
               {
                 path: 'tasks',

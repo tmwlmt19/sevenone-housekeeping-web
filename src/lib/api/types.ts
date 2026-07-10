@@ -13,9 +13,17 @@ export type RoomUpdate = Schemas['RoomUpdate']
 export type RoomStatus = Schemas['RoomStatus']
 
 export type Staff = Schemas['UserRead']
-export type StaffCreate = Schemas['UserCreate']
 export type StaffUpdate = Schemas['UserUpdate']
 export type UserRole = Schemas['UserRole']
+
+// Access requests (manager → admin approval queue).
+export type AccessRequest = Schemas['AccessRequestRead']
+export type AccessRequestCreate = Schemas['AccessRequestCreate']
+export type RequestResource = Schemas['RequestResource']
+export type RequestKind = Schemas['RequestKind']
+export type RequestStatus = Schemas['RequestStatus']
+export type StaffAddPayload = Schemas['StaffAddPayload']
+export type RoomAddPayload = Schemas['RoomAddPayload']
 
 export type Task = Schemas['TaskRead']
 export type TaskCreate = Schemas['TaskCreate']

@@ -169,8 +169,7 @@ export interface paths {
         /** List Users */
         get: operations["list_users_api_v1_hotels__hotel_id__users_get"];
         put?: never;
-        /** Create User */
-        post: operations["create_user_api_v1_hotels__hotel_id__users_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -189,8 +188,7 @@ export interface paths {
         /** Update User */
         put: operations["update_user_api_v1_hotels__hotel_id__users__user_id__put"];
         post?: never;
-        /** Delete User */
-        delete: operations["delete_user_api_v1_hotels__hotel_id__users__user_id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -206,8 +204,7 @@ export interface paths {
         /** List Rooms */
         get: operations["list_rooms_api_v1_hotels__hotel_id__rooms_get"];
         put?: never;
-        /** Create Room */
-        post: operations["create_room_api_v1_hotels__hotel_id__rooms_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -226,8 +223,7 @@ export interface paths {
         /** Update Room */
         put: operations["update_room_api_v1_hotels__hotel_id__rooms__room_id__put"];
         post?: never;
-        /** Delete Room */
-        delete: operations["delete_room_api_v1_hotels__hotel_id__rooms__room_id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -311,10 +307,166 @@ export interface paths {
         patch: operations["update_task_status_api_v1_hotels__hotel_id__tasks__task_id__status_patch"];
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hotel Access Requests
+         * @description A manager sees their own hotel's requests (to track pending/decided).
+         */
+        get: operations["list_hotel_access_requests_api_v1_hotels__hotel_id__access_requests_get"];
+        put?: never;
+        /**
+         * File Access Request
+         * @description A manager asks a platform admin to add or remove a staff member or room.
+         *     The request is only validated here; nothing is created/deleted until an
+         *     admin approves it.
+         */
+        post: operations["file_access_request_api_v1_hotels__hotel_id__access_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Access Requests
+         * @description The global queue across all hotels. Defaults to pending.
+         */
+        get: operations["list_access_requests_api_v1_access_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/access-requests/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Access Request
+         * @description Perform the requested add/remove and close the request in one
+         *     transaction, so the record and the action can never diverge. Idempotent-
+         *     guarded: acting on an already-decided request returns 409.
+         */
+        post: operations["approve_access_request_api_v1_access_requests__request_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/access-requests/{request_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Access Request */
+        post: operations["reject_access_request_api_v1_access_requests__request_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccessRequestCreate
+         * @description A manager files this. `add` requires a resource-matched `payload` and no
+         *     `target_id`; `remove` requires a `target_id` and no `payload`.
+         */
+        AccessRequestCreate: {
+            resource: components["schemas"]["RequestResource"];
+            kind: components["schemas"]["RequestKind"];
+            /** Note */
+            note?: string | null;
+            /** Target Id */
+            target_id?: string | null;
+            /** Payload */
+            payload?: components["schemas"]["StaffAddPayload"] | components["schemas"]["RoomAddPayload"] | null;
+        };
+        /**
+         * AccessRequestDecision
+         * @description Returned when an admin approves a request. For a staff `add`, the one-time
+         *     temp password and the created user are surfaced so the admin can hand them
+         *     over; other kinds return just the closed request.
+         */
+        AccessRequestDecision: {
+            request: components["schemas"]["AccessRequestRead"];
+            /** Temporary Password */
+            temporary_password?: string | null;
+        };
+        /** AccessRequestRead */
+        AccessRequestRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Hotel Id
+             * Format: uuid
+             */
+            hotel_id: string;
+            resource: components["schemas"]["RequestResource"];
+            kind: components["schemas"]["RequestKind"];
+            status: components["schemas"]["RequestStatus"];
+            /** Requested By */
+            requested_by: string | null;
+            /** Target Id */
+            target_id: string | null;
+            /** Payload */
+            payload: Record<string, never> | null;
+            /** Note */
+            note: string | null;
+            /** Decision Note */
+            decision_note: string | null;
+            /** Decided By */
+            decided_by: string | null;
+            /** Decided At */
+            decided_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** AccessRequestReject */
+        AccessRequestReject: {
+            /** Decision Note */
+            decision_note?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -395,6 +547,36 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /**
+         * RequestKind
+         * @enum {string}
+         */
+        RequestKind: "add" | "remove";
+        /**
+         * RequestResource
+         * @description What an access request operates on.
+         * @enum {string}
+         */
+        RequestResource: "staff" | "room";
+        /**
+         * RequestStatus
+         * @enum {string}
+         */
+        RequestStatus: "pending" | "approved" | "rejected";
+        /**
+         * RoomAddPayload
+         * @description Proposed room for a `room`/`add` request.
+         */
+        RoomAddPayload: {
+            /** Room Number */
+            room_number: string;
+            /** Floor */
+            floor?: number | null;
+            /** Room Type */
+            room_type?: string | null;
+            /** @default clean */
+            status: components["schemas"]["RoomStatus"];
+        };
         /** RoomCreate */
         RoomCreate: {
             /** Room Number */
@@ -458,6 +640,21 @@ export interface components {
             /** Room Type */
             room_type?: string | null;
             status?: components["schemas"]["RoomStatus"] | null;
+        };
+        /**
+         * StaffAddPayload
+         * @description Proposed staff member for a `staff`/`add` request. No password: a temp
+         *     password is generated at approval time and shown once to the admin.
+         */
+        StaffAddPayload: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Name */
+            name: string;
+            role: components["schemas"]["UserRole"];
         };
         /** TaskCreate */
         TaskCreate: {
@@ -551,19 +748,6 @@ export interface components {
              * @default bearer
              */
             token_type: string;
-        };
-        /** UserCreate */
-        UserCreate: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Password */
-            password: string;
-            /** Name */
-            name: string;
-            role: components["schemas"]["UserRole"];
         };
         /**
          * UserProvision
@@ -950,41 +1134,6 @@ export interface operations {
             };
         };
     };
-    create_user_api_v1_hotels__hotel_id__users_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                hotel_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_user_api_v1_hotels__hotel_id__users__user_id__get: {
         parameters: {
             query?: never;
@@ -1053,36 +1202,6 @@ export interface operations {
             };
         };
     };
-    delete_user_api_v1_hotels__hotel_id__users__user_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                hotel_id: string;
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_rooms_api_v1_hotels__hotel_id__rooms_get: {
         parameters: {
             query?: never;
@@ -1101,41 +1220,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoomRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_room_api_v1_hotels__hotel_id__rooms_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                hotel_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoomCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoomRead"];
                 };
             };
             /** @description Validation Error */
@@ -1205,36 +1289,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RoomRead"];
                 };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_room_api_v1_hotels__hotel_id__rooms__room_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                hotel_id: string;
-                room_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -1443,6 +1497,172 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hotel_access_requests_api_v1_hotels__hotel_id__access_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["RequestStatus"] | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    file_access_request_api_v1_hotels__hotel_id__access_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_access_requests_api_v1_access_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["RequestStatus"] | null;
+                hotel_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_access_request_api_v1_access_requests__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDecision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_access_request_api_v1_access_requests__request_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestReject"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestRead"];
                 };
             };
             /** @description Validation Error */

@@ -1,10 +1,8 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { UserMinus } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
-import { ConfirmDialog } from '@/components/confirm-dialog'
+import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,28 +17,15 @@ import {
 import type { Staff } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { humanize } from '@/lib/format'
-import { useDeleteStaff, useStaff } from '@/lib/queries/staff'
+import { useStaff } from '@/lib/queries/staff'
 
 export function StaffTable() {
   const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const isManager = user?.role === 'manager'
   const { data: staff, isLoading, isError, error } = useStaff()
-  const deleteStaff = useDeleteStaff()
-  const [toDelete, setToDelete] = useState<Staff | null>(null)
+  const [toRemove, setToRemove] = useState<Staff | null>(null)
 
-  const colCount = isAdmin ? 4 : 3
-
-  function handleDelete() {
-    if (!toDelete) return
-    deleteStaff.mutate(toDelete.id, {
-      onSuccess: () => {
-        toast.success(`${toDelete.name} removed`)
-        setToDelete(null)
-      },
-      onError: (e) =>
-        toast.error(e instanceof ApiError ? e.message : 'Failed to remove'),
-    })
-  }
+  const colCount = isManager ? 4 : 3
 
   return (
     <>
@@ -51,7 +36,7 @@ export function StaffTable() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
-              {isAdmin && (
+              {isManager && (
                 <TableHead className="w-24 text-right">Actions</TableHead>
               )}
             </TableRow>
@@ -94,26 +79,18 @@ export function StaffTable() {
                 <TableCell>
                   <Badge variant="secondary">{humanize(member.role)}</Badge>
                 </TableCell>
-                {isAdmin && (
+                {isManager && (
                   <TableCell className="text-right">
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Edit"
-                    >
-                      <Link to={`/staff/${member.id}`}>
-                        <Pencil className="size-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Delete"
-                      onClick={() => setToDelete(member)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    {member.id !== user?.id && member.role !== 'admin' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Request removal"
+                        onClick={() => setToRemove(member)}
+                      >
+                        <UserMinus className="size-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 )}
               </TableRow>
@@ -122,17 +99,11 @@ export function StaffTable() {
         </Table>
       </div>
 
-      <ConfirmDialog
-        open={toDelete !== null}
-        onOpenChange={(open) => !open && setToDelete(null)}
-        title="Remove staff member?"
-        description={
-          toDelete ? `${toDelete.name} will lose access to this hotel.` : ''
-        }
-        confirmLabel="Remove"
-        destructive
-        loading={deleteStaff.isPending}
-        onConfirm={handleDelete}
+      <RequestRemovalDialog
+        resource="staff"
+        targetId={toRemove?.id ?? null}
+        targetLabel={toRemove ? `${toRemove.name} (${toRemove.email})` : ''}
+        onClose={() => setToRemove(null)}
       />
     </>
   )

@@ -1,6 +1,7 @@
 import {
   BedDouble,
   ClipboardList,
+  Inbox,
   LayoutDashboard,
   LogOut,
   Settings,
@@ -43,6 +44,7 @@ const NAV_ITEMS: readonly NavItem[] = [
     icon: ClipboardList,
     roles: ['admin', 'manager'],
   },
+  { to: '/requests', label: 'Requests', icon: Inbox, roles: ['manager'] },
   {
     to: '/settings/hotel',
     label: 'Settings',

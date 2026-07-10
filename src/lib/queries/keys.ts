@@ -15,4 +15,6 @@ export const qk = {
   tasks: (hotelId: string, filters: TaskFilters = {}) =>
     ['tasks', hotelId, filters] as const,
   task: (hotelId: string, taskId: string) => ['task', hotelId, taskId] as const,
+  accessRequests: (hotelId: string, status?: string) =>
+    ['access-requests', hotelId, status ?? 'all'] as const,
 }

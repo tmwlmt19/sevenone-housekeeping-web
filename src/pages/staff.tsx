@@ -8,7 +8,7 @@ import { StaffTable } from '@/features/staff/staff-table'
 
 export function StaffPage() {
   const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const isManager = user?.role === 'manager'
 
   return (
     <div>
@@ -16,11 +16,11 @@ export function StaffPage() {
         title="Staff"
         description="The people who work at your hotel."
         action={
-          isAdmin ? (
+          isManager ? (
             <Button asChild>
-              <Link to="/staff/new">
+              <Link to="/staff/request">
                 <Plus className="size-4" />
-                Add staff
+                Request staff
               </Link>
             </Button>
           ) : undefined

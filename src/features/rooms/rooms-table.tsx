@@ -1,10 +1,9 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
-import { ConfirmDialog } from '@/components/confirm-dialog'
+import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
 import { RoomStatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,11 +25,7 @@ import {
 import { ROOM_STATUSES, type Room, type RoomStatus } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { humanize } from '@/lib/format'
-import {
-  useDeleteRoom,
-  useRooms,
-  useUpdateRoomStatus,
-} from '@/lib/queries/rooms'
+import { useRooms, useUpdateRoomStatus } from '@/lib/queries/rooms'
 
 function RoomStatusSelect({ room }: { room: Room }) {
   const updateStatus = useUpdateRoomStatus()
@@ -66,26 +61,14 @@ function RoomStatusSelect({ room }: { room: Room }) {
 
 export function RoomsTable() {
   const { user } = useAuth()
+  const isManager = user?.role === 'manager'
   const isAdmin = user?.role === 'admin'
   const { data: rooms, isLoading, isError, error } = useRooms()
-  const deleteRoom = useDeleteRoom()
-  const [toDelete, setToDelete] = useState<Room | null>(null)
+  const [toRemove, setToRemove] = useState<Room | null>(null)
 
-  function handleDelete() {
-    if (!toDelete) return
-    deleteRoom.mutate(toDelete.id, {
-      onSuccess: () => {
-        toast.success(`Room ${toDelete.room_number} deleted`)
-        setToDelete(null)
-      },
-      onError: (e) =>
-        toast.error(
-          e instanceof ApiError ? e.message : 'Failed to delete room',
-        ),
-    })
-  }
-
-  const colCount = isAdmin ? 5 : 4
+  // Managers change status inline and can request removals; admins (rarely here)
+  // just view. Only managers get the actions column.
+  const colCount = isManager ? 5 : 4
 
   return (
     <>
@@ -97,7 +80,7 @@ export function RoomsTable() {
               <TableHead>Floor</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
-              {isAdmin && (
+              {isManager && (
                 <TableHead className="w-24 text-right">Actions</TableHead>
               )}
             </TableRow>
@@ -128,7 +111,7 @@ export function RoomsTable() {
                   colSpan={colCount}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No rooms yet. Add your first room to get started.
+                  No rooms yet.
                 </TableCell>
               </TableRow>
             )}
@@ -147,23 +130,13 @@ export function RoomsTable() {
                     <RoomStatusSelect room={room} />
                   )}
                 </TableCell>
-                {isAdmin && (
+                {isManager && (
                   <TableCell className="text-right">
                     <Button
-                      asChild
                       variant="ghost"
                       size="icon"
-                      aria-label="Edit"
-                    >
-                      <Link to={`/rooms/${room.id}`}>
-                        <Pencil className="size-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Delete"
-                      onClick={() => setToDelete(room)}
+                      aria-label="Request removal"
+                      onClick={() => setToRemove(room)}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -175,19 +148,11 @@ export function RoomsTable() {
         </Table>
       </div>
 
-      <ConfirmDialog
-        open={toDelete !== null}
-        onOpenChange={(open) => !open && setToDelete(null)}
-        title="Delete room?"
-        description={
-          toDelete
-            ? `Room ${toDelete.room_number} will be permanently removed.`
-            : ''
-        }
-        confirmLabel="Delete"
-        destructive
-        loading={deleteRoom.isPending}
-        onConfirm={handleDelete}
+      <RequestRemovalDialog
+        resource="room"
+        targetId={toRemove?.id ?? null}
+        targetLabel={toRemove ? `room ${toRemove.room_number}` : ''}
+        onClose={() => setToRemove(null)}
       />
     </>
   )

@@ -8,7 +8,7 @@ import { RoomsTable } from '@/features/rooms/rooms-table'
 
 export function RoomsPage() {
   const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const isManager = user?.role === 'manager'
 
   return (
     <div>
@@ -16,18 +16,18 @@ export function RoomsPage() {
         title="Rooms"
         description="Manage the rooms in your hotel."
         action={
-          isAdmin ? (
+          isManager ? (
             <Button asChild>
-              <Link to="/rooms/new">
+              <Link to="/rooms/request">
                 <Plus className="size-4" />
-                New room
+                Request room
               </Link>
             </Button>
           ) : undefined
         }
       />
       <RoomsTable />
-      {/* Route-aware create/edit modal renders here over the list. */}
+      {/* Route-aware request modal renders here over the list. */}
       <Outlet />
     </div>
   )
