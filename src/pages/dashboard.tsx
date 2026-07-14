@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
+import { RoomStatusControl } from '@/features/rooms/room-status-control'
 import { PageHeader } from '@/components/page-header'
 import {
   PriorityBadge,
-  RoomStatusBadge,
   TaskStatusBadge,
 } from '@/components/status-badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -73,10 +73,9 @@ export function DashboardPage() {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {sortedRooms.map((room) => (
-              <Link
+              <div
                 key={room.id}
-                to={`/rooms/${room.id}`}
-                className="hover:bg-accent/50 flex flex-col gap-2 rounded-lg border p-3 transition-colors"
+                className="flex flex-col gap-2 rounded-lg border p-3"
               >
                 <div className="flex items-baseline justify-between gap-1">
                   <span className="text-lg font-semibold">
@@ -88,8 +87,8 @@ export function DashboardPage() {
                     </span>
                   )}
                 </div>
-                <RoomStatusBadge status={room.status} />
-              </Link>
+                <RoomStatusControl room={room} triggerClassName="w-full" />
+              </div>
             ))}
           </div>
         )}

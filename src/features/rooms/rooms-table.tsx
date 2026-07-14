@@ -1,30 +1,11 @@
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
 import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
-import { RoomStatusBadge } from '@/components/status-badge'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { RoomStatusControl } from '@/features/rooms/room-status-control'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -34,68 +15,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ROOM_STATUSES, type Room, type RoomStatus } from '@/lib/api/types'
+import { type Room } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import { useRooms, useUpdateRoomStatus } from '@/lib/queries/rooms'
-
-function RoomStatusSelect({
-  room,
-  onMarkedDirty,
-}: {
-  room: Room
-  onMarkedDirty: (room: Room) => void
-}) {
-  const { t } = useTranslation()
-  const updateStatus = useUpdateRoomStatus()
-  return (
-    <Select
-      value={room.status}
-      disabled={updateStatus.isPending}
-      onValueChange={(status) =>
-        updateStatus.mutate(
-          { roomId: room.id, status: status as RoomStatus },
-          {
-            onSuccess: () => {
-              // Nudge the manager to schedule cleaning so dirty rooms
-              // don't get forgotten.
-              if (status === 'dirty') onMarkedDirty(room)
-            },
-            onError: (e) =>
-              toast.error(
-                e instanceof ApiError
-                  ? e.message
-                  : t('roomsTable.failedUpdateStatus'),
-              ),
-          },
-        )
-      }
-    >
-      <SelectTrigger
-        className="h-8 w-40"
-        aria-label={t('roomsTable.roomStatusAria')}
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {ROOM_STATUSES.map((s) => (
-          <SelectItem key={s} value={s}>
-            {t(`enums.roomStatus.${s}`)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
+import { useRooms } from '@/lib/queries/rooms'
 
 export function RoomsTable() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
-  const isAdmin = user?.role === 'admin'
   const { data: rooms, isLoading, isError, error } = useRooms()
   const [toRemove, setToRemove] = useState<Room | null>(null)
-  const [dirtyRoom, setDirtyRoom] = useState<Room | null>(null)
 
   // Managers change status inline and can request removals; admins (rarely here)
   // just view. Only managers get the actions column.
@@ -157,14 +86,7 @@ export function RoomsTable() {
                 <TableCell>{room.floor ?? '—'}</TableCell>
                 <TableCell>{room.room_type ?? '—'}</TableCell>
                 <TableCell>
-                  {isAdmin ? (
-                    <RoomStatusBadge status={room.status} />
-                  ) : (
-                    <RoomStatusSelect
-                      room={room}
-                      onMarkedDirty={setDirtyRoom}
-                    />
-                  )}
+                  <RoomStatusControl room={room} />
                 </TableCell>
                 {isManager && (
                   <TableCell className="text-right">
@@ -194,35 +116,6 @@ export function RoomsTable() {
         }
         onClose={() => setToRemove(null)}
       />
-
-      <AlertDialog
-        open={dirtyRoom !== null}
-        onOpenChange={(open) => {
-          if (!open) setDirtyRoom(null)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('dirtyRoomPrompt.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('dirtyRoomPrompt.description', {
-                number: dirtyRoom?.room_number ?? '',
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('dirtyRoomPrompt.dismiss')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (dirtyRoom) navigate(`/tasks/new?room=${dirtyRoom.id}`)
-                setDirtyRoom(null)
-              }}
-            >
-              {t('dirtyRoomPrompt.createTask')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
