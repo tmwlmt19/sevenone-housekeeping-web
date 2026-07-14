@@ -28,6 +28,7 @@ export const es: Catalog = {
     logout: 'Cerrar sesión',
     housekeeping: 'Limpieza',
     toggleMenu: 'Alternar menú',
+    closeMenu: 'Cerrar menú',
   },
   enums: {
     roomStatus: {

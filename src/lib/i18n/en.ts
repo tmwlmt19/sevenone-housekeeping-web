@@ -26,6 +26,7 @@ export const en = {
     logout: 'Logout',
     housekeeping: 'Housekeeping',
     toggleMenu: 'Toggle menu',
+    closeMenu: 'Close menu',
   },
   enums: {
     roomStatus: {

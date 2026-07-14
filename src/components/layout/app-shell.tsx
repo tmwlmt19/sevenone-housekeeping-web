@@ -8,6 +8,7 @@ import {
   Settings,
   UserCircle,
   Users,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -111,7 +112,18 @@ export function AppShell() {
             : '-translate-x-full md:w-0 md:overflow-hidden md:border-r-0',
         )}
       >
-        <div className="px-5 py-4 text-lg font-semibold">SevenOne</div>
+        <div className="flex items-center justify-between px-5 py-4">
+          <span className="text-lg font-semibold">SevenOne</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            aria-label={t('nav.closeMenu')}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="size-5" />
+          </Button>
+        </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {items.map(({ to, labelKey, icon: Icon }) => (
             <NavLink
