@@ -155,6 +155,13 @@ export const en = {
     roomStatusAria: 'Room status',
     failedUpdateStatus: 'Failed to update status',
   },
+  dirtyRoomPrompt: {
+    title: 'Schedule cleaning?',
+    description:
+      'Room {{number}} is now marked dirty. Create a cleaning task so it doesn’t get forgotten?',
+    dismiss: 'Not now',
+    createTask: 'Create task',
+  },
   staffTable: {
     name: 'Name',
     email: 'Email',

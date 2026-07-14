@@ -162,6 +162,13 @@ export const es: Catalog = {
     roomStatusAria: 'Estado de la habitación',
     failedUpdateStatus: 'Error al actualizar el estado',
   },
+  dirtyRoomPrompt: {
+    title: '¿Programar limpieza?',
+    description:
+      'La habitación {{number}} está marcada como sucia. ¿Crear una tarea de limpieza para que no se olvide?',
+    dismiss: 'Ahora no',
+    createTask: 'Crear tarea',
+  },
   staffTable: {
     name: 'Nombre',
     email: 'Correo',

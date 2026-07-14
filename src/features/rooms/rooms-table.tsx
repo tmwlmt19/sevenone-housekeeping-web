@@ -1,11 +1,22 @@
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
 import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
 import { RoomStatusBadge } from '@/components/status-badge'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -27,7 +38,13 @@ import { ROOM_STATUSES, type Room, type RoomStatus } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { useRooms, useUpdateRoomStatus } from '@/lib/queries/rooms'
 
-function RoomStatusSelect({ room }: { room: Room }) {
+function RoomStatusSelect({
+  room,
+  onMarkedDirty,
+}: {
+  room: Room
+  onMarkedDirty: (room: Room) => void
+}) {
   const { t } = useTranslation()
   const updateStatus = useUpdateRoomStatus()
   return (
@@ -38,6 +55,11 @@ function RoomStatusSelect({ room }: { room: Room }) {
         updateStatus.mutate(
           { roomId: room.id, status: status as RoomStatus },
           {
+            onSuccess: () => {
+              // Nudge the manager to schedule cleaning so dirty rooms
+              // don't get forgotten.
+              if (status === 'dirty') onMarkedDirty(room)
+            },
             onError: (e) =>
               toast.error(
                 e instanceof ApiError
@@ -67,11 +89,13 @@ function RoomStatusSelect({ room }: { room: Room }) {
 
 export function RoomsTable() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
   const isAdmin = user?.role === 'admin'
   const { data: rooms, isLoading, isError, error } = useRooms()
   const [toRemove, setToRemove] = useState<Room | null>(null)
+  const [dirtyRoom, setDirtyRoom] = useState<Room | null>(null)
 
   // Managers change status inline and can request removals; admins (rarely here)
   // just view. Only managers get the actions column.
@@ -136,7 +160,10 @@ export function RoomsTable() {
                   {isAdmin ? (
                     <RoomStatusBadge status={room.status} />
                   ) : (
-                    <RoomStatusSelect room={room} />
+                    <RoomStatusSelect
+                      room={room}
+                      onMarkedDirty={setDirtyRoom}
+                    />
                   )}
                 </TableCell>
                 {isManager && (
@@ -167,6 +194,35 @@ export function RoomsTable() {
         }
         onClose={() => setToRemove(null)}
       />
+
+      <AlertDialog
+        open={dirtyRoom !== null}
+        onOpenChange={(open) => {
+          if (!open) setDirtyRoom(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('dirtyRoomPrompt.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('dirtyRoomPrompt.description', {
+                number: dirtyRoom?.room_number ?? '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('dirtyRoomPrompt.dismiss')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (dirtyRoom) navigate(`/tasks/new?room=${dirtyRoom.id}`)
+                setDirtyRoom(null)
+              }}
+            >
+              {t('dirtyRoomPrompt.createTask')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
