@@ -156,6 +156,22 @@ export const es: Catalog = {
     everyone: 'Todos',
     autoApprove: 'Aprobar tareas completadas automáticamente',
   },
+  workload: {
+    trigger: 'Mover carga',
+    title: 'Mover las tareas de una camarista',
+    description:
+      'Cubre a una camarista que avisó o no se presentó moviendo sus tareas abiertas a otra persona.',
+    from: 'Camarista ausente',
+    fromPlaceholder: 'Selecciona una camarista',
+    to: 'Mover sus tareas a',
+    everyoneElse: 'El resto (repartir equitativamente)',
+    submit: 'Mover tareas',
+    moving: 'Moviendo…',
+    moved_one: '{{count}} tarea movida',
+    moved_other: '{{count}} tareas movidas',
+    failed: 'No se pudieron mover las tareas',
+    noHousekeepers: 'Este hotel aún no tiene camaristas.',
+  },
   notFound: {
     message: 'No se encontró esta página.',
     goHome: 'Ir al inicio',

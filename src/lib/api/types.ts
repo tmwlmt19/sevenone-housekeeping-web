@@ -31,6 +31,8 @@ export type RequestStatus = Schemas['RequestStatus']
 export type StaffAddPayload = Schemas['StaffAddPayload']
 export type RoomAddPayload = Schemas['RoomAddPayload']
 
+export type WorkloadMoveResponse = Schemas['WorkloadMoveResponse']
+
 export type Task = Schemas['TaskRead']
 export type TaskCreate = Schemas['TaskCreate']
 export type TaskUpdate = Schemas['TaskUpdate']

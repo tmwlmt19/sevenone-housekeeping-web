@@ -153,6 +153,22 @@ export const en = {
     everyone: 'Everyone',
     autoApprove: 'Auto-approve completed tasks',
   },
+  workload: {
+    trigger: 'Move workload',
+    title: "Move a housekeeper's tasks",
+    description:
+      "Cover a housekeeper who called in or didn't show by moving their open tasks to someone else.",
+    from: 'Housekeeper who is out',
+    fromPlaceholder: 'Select a housekeeper',
+    to: 'Move their tasks to',
+    everyoneElse: 'Everyone else (split evenly)',
+    submit: 'Move tasks',
+    moving: 'Moving…',
+    moved_one: '{{count}} task moved',
+    moved_other: '{{count}} tasks moved',
+    failed: 'Could not move the tasks',
+    noHousekeepers: 'This hotel has no housekeepers yet.',
+  },
   notFound: {
     message: 'This page could not be found.',
     goHome: 'Go home',

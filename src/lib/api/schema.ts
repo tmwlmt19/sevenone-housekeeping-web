@@ -402,6 +402,110 @@ export interface paths {
         patch: operations["update_task_status_api_v1_hotels__hotel_id__tasks__task_id__status_patch"];
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/tasks/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign Workload
+         * @description Call-in: move every open task from one housekeeper to a single other one.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    hotel_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReassignWorkload"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkloadMoveResponse"];
+                    };
+                };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HTTPValidationError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/redistribute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redistribute Workload
+         * @description No-show: split one housekeeper's open tasks evenly across the others.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    hotel_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RedistributeWorkload"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkloadMoveResponse"];
+                    };
+                };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HTTPValidationError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}/access-requests": {
         parameters: {
             query?: never;
@@ -860,6 +964,46 @@ export interface components {
         /** TaskStatusUpdate */
         TaskStatusUpdate: {
             status: components["schemas"]["TaskStatus"];
+        };
+        /** ReassignWorkload */
+        ReassignWorkload: {
+            /**
+             * From Housekeeper Id
+             * Format: uuid
+             */
+            from_housekeeper_id: string;
+            /**
+             * To Housekeeper Id
+             * Format: uuid
+             */
+            to_housekeeper_id: string;
+        };
+        /** RedistributeWorkload */
+        RedistributeWorkload: {
+            /**
+             * From Housekeeper Id
+             * Format: uuid
+             */
+            from_housekeeper_id: string;
+        };
+        /** WorkloadAssignment */
+        WorkloadAssignment: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** Tasks Assigned */
+            tasks_assigned: number;
+        };
+        /** WorkloadMoveResponse */
+        WorkloadMoveResponse: {
+            /** Tasks Moved */
+            tasks_moved: number;
+            /** Assignments */
+            assignments: components["schemas"]["WorkloadAssignment"][];
         };
         /** TaskUpdate */
         TaskUpdate: {
