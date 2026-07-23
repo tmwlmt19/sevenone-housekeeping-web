@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TASK_STATUSES } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
+import { compareByUrgency } from '@/lib/tasks'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
 import { useTasks } from '@/lib/queries/tasks'
@@ -37,7 +38,11 @@ export function TasksBoard({ assignedTo }: TasksBoardProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       {TASK_STATUSES.map((status) => {
-        const column = tasks?.filter((t) => t.status === status) ?? []
+        // Columns are the statuses; within a column, order by urgency
+        // (overdue tasks count as urgent).
+        const column = (tasks?.filter((t) => t.status === status) ?? [])
+          .slice()
+          .sort(compareByUrgency)
         return (
           <div key={status} className="flex flex-col gap-3">
             <div className="flex items-center justify-between">

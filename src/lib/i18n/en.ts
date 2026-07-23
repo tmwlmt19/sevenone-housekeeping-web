@@ -14,6 +14,7 @@ export const en = {
     actions: 'Actions',
     somethingWentWrong: 'Something went wrong',
     updateFailed: 'Update failed',
+    overdue: 'Overdue',
   },
   nav: {
     dashboard: 'Dashboard',

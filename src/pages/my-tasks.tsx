@@ -10,15 +10,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { Task, TaskStatus } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { formatDate } from '@/lib/format'
+import { compareTasks, effectivePriority, isOverdue } from '@/lib/tasks'
+import { cn } from '@/lib/utils'
 import { useRooms } from '@/lib/queries/rooms'
 import { useTasks, useUpdateTaskStatus } from '@/lib/queries/tasks'
-
-const STATUS_ORDER: Record<TaskStatus, number> = {
-  in_progress: 0,
-  assigned: 1,
-  pending: 2,
-  completed: 3,
-}
 
 export function MyTasksPage() {
   const { t } = useTranslation()
@@ -43,9 +38,8 @@ export function MyTasksPage() {
     )
   }
 
-  const sorted = [...(tasks ?? [])].sort(
-    (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status],
-  )
+  // Status first, then urgency within the status (overdue counts as urgent).
+  const sorted = [...(tasks ?? [])].sort(compareTasks)
 
   return (
     <div>
@@ -70,13 +64,21 @@ export function MyTasksPage() {
                   <span className="text-lg font-semibold">
                     {t('myTasks.room', { label: roomLabel(task.room_id) })}
                   </span>
-                  <PriorityBadge priority={task.priority} />
+                  <PriorityBadge priority={effectivePriority(task)} />
                 </div>
                 <div className="flex items-center gap-2">
                   <TaskStatusBadge status={task.status} />
                   {task.due_date && (
-                    <span className="text-muted-foreground text-xs">
+                    <span
+                      className={cn(
+                        'text-xs',
+                        isOverdue(task)
+                          ? 'text-destructive font-medium'
+                          : 'text-muted-foreground',
+                      )}
+                    >
                       {t('myTasks.due', { date: formatDate(task.due_date) })}
+                      {isOverdue(task) && ` · ${t('common.overdue')}`}
                     </span>
                   )}
                 </div>

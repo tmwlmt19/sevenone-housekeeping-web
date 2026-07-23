@@ -16,6 +16,7 @@ export const es: Catalog = {
     actions: 'Acciones',
     somethingWentWrong: 'Algo salió mal',
     updateFailed: 'Error al actualizar',
+    overdue: 'Vencida',
   },
   nav: {
     dashboard: 'Panel',

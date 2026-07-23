@@ -44,10 +44,20 @@ type FormValues = {
 const EMPTY: FormValues = {
   room_id: '',
   assigned_to: UNASSIGNED,
-  status: 'pending',
+  // New tasks default to "assigned" (managers usually assign on creation); if the
+  // task is left unassigned, onSubmit downgrades it to "pending" (you can't be
+  // assigned to nobody).
+  status: 'assigned',
   priority: 'normal',
   notes: '',
   due_date: '',
+}
+
+/** Today as a YYYY-MM-DD value for <input type="date">. */
+function todayInput(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export function TaskFormModal() {
@@ -84,7 +94,8 @@ export function TaskFormModal() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { ...EMPTY, room_id: presetRoomId },
+    // New tasks prefill today's due date; editing overrides this from the task.
+    defaultValues: { ...EMPTY, room_id: presetRoomId, due_date: todayInput() },
   })
 
   useEffect(() => {
@@ -111,11 +122,18 @@ export function TaskFormModal() {
   }
 
   function onSubmit(values: FormValues) {
+    const assignedTo =
+      values.assigned_to === UNASSIGNED ? null : values.assigned_to
+    // A task can't be "assigned" to nobody — fall back to pending when the
+    // default "assigned" status is left on an unassigned task.
+    const status =
+      assignedTo === null && values.status === 'assigned'
+        ? 'pending'
+        : values.status
     const body: TaskCreate | TaskUpdate = {
       room_id: values.room_id,
-      assigned_to:
-        values.assigned_to === UNASSIGNED ? null : values.assigned_to,
-      status: values.status,
+      assigned_to: assignedTo,
+      status,
       priority: values.priority,
       notes: values.notes.trim() === '' ? null : values.notes,
       due_date: fromDateInput(values.due_date),
