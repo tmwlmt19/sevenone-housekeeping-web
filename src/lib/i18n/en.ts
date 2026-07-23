@@ -169,6 +169,17 @@ export const en = {
     failed: 'Could not move the tasks',
     noHousekeepers: 'This hotel has no housekeepers yet.',
   },
+  clearCompleted: {
+    trigger: 'Clear completed',
+    title: 'Clear completed tasks?',
+    description:
+      "This removes all completed tasks from the board. They're archived, not deleted, so history and 'last cleaned by' are kept.",
+    confirm: 'Clear',
+    cleared_one: '{{count}} completed task cleared',
+    cleared_other: '{{count}} completed tasks cleared',
+    none: 'No completed tasks to clear',
+    failed: 'Could not clear the tasks',
+  },
   notFound: {
     message: 'This page could not be found.',
     goHome: 'Go home',

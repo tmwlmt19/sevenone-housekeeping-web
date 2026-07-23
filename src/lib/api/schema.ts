@@ -454,6 +454,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/tasks/clear-completed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear Completed Tasks
+         * @description Clear all completed tasks off the board (soft-archive).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    hotel_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClearCompletedResponse"];
+                    };
+                };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HTTPValidationError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}/tasks/redistribute": {
         parameters: {
             query?: never;
@@ -1004,6 +1052,11 @@ export interface components {
             tasks_moved: number;
             /** Assignments */
             assignments: components["schemas"]["WorkloadAssignment"][];
+        };
+        /** ClearCompletedResponse */
+        ClearCompletedResponse: {
+            /** Cleared */
+            cleared: number;
         };
         /** TaskUpdate */
         TaskUpdate: {

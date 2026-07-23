@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ClearCompletedButton } from '@/features/tasks/clear-completed-button'
 import { TasksBoard } from '@/features/tasks/tasks-board'
 import { WorkloadDialog } from '@/features/tasks/workload-dialog'
 import { useHotel, useSetAutoApprove } from '@/lib/queries/hotel'
@@ -74,6 +75,7 @@ export function TasksPage() {
             </label>
           )}
           <WorkloadDialog />
+          <ClearCompletedButton />
         </div>
       </div>
 

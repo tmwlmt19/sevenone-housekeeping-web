@@ -172,6 +172,17 @@ export const es: Catalog = {
     failed: 'No se pudieron mover las tareas',
     noHousekeepers: 'Este hotel aún no tiene camaristas.',
   },
+  clearCompleted: {
+    trigger: 'Borrar completadas',
+    title: '¿Borrar las tareas completadas?',
+    description:
+      'Esto quita del tablero todas las tareas completadas. Se archivan, no se eliminan, así que se conserva el historial y "última limpieza por".',
+    confirm: 'Borrar',
+    cleared_one: '{{count}} tarea completada borrada',
+    cleared_other: '{{count}} tareas completadas borradas',
+    none: 'No hay tareas completadas para borrar',
+    failed: 'No se pudieron borrar las tareas',
+  },
   notFound: {
     message: 'No se encontró esta página.',
     goHome: 'Ir al inicio',

@@ -108,6 +108,21 @@ export function useRedistributeWorkload() {
   })
 }
 
+/** Clear (soft-archive) all completed tasks off the board. */
+export function useClearCompleted() {
+  const hotelId = useHotelId()
+  const invalidate = useInvalidateTaskData()
+  return useMutation({
+    mutationFn: async () =>
+      unwrap(
+        await api.POST('/api/v1/hotels/{hotel_id}/tasks/clear-completed', {
+          params: { path: { hotel_id: hotelId } },
+        }),
+      ),
+    onSuccess: invalidate,
+  })
+}
+
 export function useUpdateTaskStatus() {
   const hotelId = useHotelId()
   const invalidate = useInvalidateTaskData()
