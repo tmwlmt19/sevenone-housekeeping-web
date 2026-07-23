@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ImportDirtyRoomsButton } from '@/features/tasks/import-dirty-rooms-modal'
 import { TasksBoard } from '@/features/tasks/tasks-board'
 import { useStaff } from '@/lib/queries/staff'
 
@@ -28,12 +29,15 @@ export function TasksPage() {
         title={t('tasksPage.title')}
         description={t('tasksPage.subtitle')}
         action={
-          <Button asChild>
-            <Link to="/tasks/new">
-              <Plus className="size-4" />
-              {t('tasksPage.newTask')}
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ImportDirtyRoomsButton />
+            <Button asChild>
+              <Link to="/tasks/new">
+                <Plus className="size-4" />
+                {t('tasksPage.newTask')}
+              </Link>
+            </Button>
+          </div>
         }
       />
 

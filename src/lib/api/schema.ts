@@ -55,6 +55,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forgot Password
+         * @description Start a self-service password reset.
+         *
+         *     Always returns the same generic 200 whether or not the email matches a
+         *     user, so the endpoint never reveals which addresses have accounts.
+         */
+        post: operations["forgot_password_api_v1_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Password
+         * @description Consume a reset token and set a new password.
+         */
+        post: operations["reset_password_api_v1_auth_reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -168,7 +211,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Hotel */
+        /**
+         * Get Hotel
+         * @description View a hotel's profile. Manager+ only — housekeepers have no feature that
+         *     needs it. Managers are scoped to their own hotel; admins are cross-tenant.
+         */
         get: operations["get_hotel_api_v1_hotels__hotel_id__get"];
         /** Update Hotel */
         put: operations["update_hotel_api_v1_hotels__hotel_id__put"];
@@ -282,6 +329,29 @@ export interface paths {
         put?: never;
         /** Create Task */
         post: operations["create_task_api_v1_hotels__hotel_id__tasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Dirty Rooms Endpoint
+         * @description Bulk-import a list of dirty rooms (e.g. from a manager's CSV): set each
+         *     room dirty, create a cleaning task per room, and optionally split the new
+         *     tasks evenly across the chosen housekeepers. See the shared core in
+         *     app/services/task_import.py for the full contract.
+         */
+        post: operations["import_dirty_rooms_endpoint_api_v1_hotels__hotel_id__tasks_import_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -412,6 +482,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Api Keys
+         * @description List a hotel's API keys (metadata only — secrets are never returned).
+         */
+        get: operations["list_api_keys_api_v1_hotels__hotel_id__api_keys_get"];
+        put?: never;
+        /**
+         * Create Api Key
+         * @description Mint a new API key for a hotel. The full secret is returned exactly once;
+         *     only its hash is stored, so it can never be shown again.
+         */
+        post: operations["create_api_key_api_v1_hotels__hotel_id__api_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke Api Key
+         * @description Revoke (disable) an API key. Idempotent — revoking an already-revoked key
+         *     is a no-op. The row is kept so its prefix/last-used stay auditable.
+         */
+        delete: operations["revoke_api_key_api_v1_hotels__hotel_id__api_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/pms/dirty-rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pms Dirty Rooms
+         * @description Machine-to-machine entry point for a PMS to push rooms that need cleaning.
+         *
+         *     Auth is a per-hotel API key (``X-API-Key`` header); the hotel is derived from
+         *     the key, never from the request body. The payload is normalized by the default
+         *     adapter, then handed to the shared import core (set rooms dirty, create tasks,
+         *     optionally balance-assign to the named housekeepers). All-or-nothing: any
+         *     unknown room or unmatched housekeeper fails the whole batch.
+         */
+        post: operations["pms_dirty_rooms_api_v1_integrations_pms_dirty_rooms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -487,6 +629,85 @@ export interface components {
             /** Decision Note */
             decision_note?: string | null;
         };
+        /**
+         * ApiKeyCreate
+         * @description Request to mint a new PMS API key for a hotel.
+         */
+        ApiKeyCreate: {
+            /** Name */
+            name: string;
+        };
+        /**
+         * ApiKeyCreateResponse
+         * @description Returned once at creation. `key` is the full secret and is never shown or
+         *     stored again — the admin must copy it now.
+         */
+        ApiKeyCreateResponse: {
+            api_key: components["schemas"]["ApiKeyRead"];
+            /** Key */
+            key: string;
+        };
+        /**
+         * ApiKeyRead
+         * @description A key's metadata. Never includes the secret — only the display prefix.
+         */
+        ApiKeyRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Hotel Id
+             * Format: uuid
+             */
+            hotel_id: string;
+            /** Name */
+            name: string;
+            /** Key Prefix */
+            key_prefix: string;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * DirtyRoomImportRequest
+         * @description Manager/CSV path: rooms and housekeepers are already in canonical form
+         *     (plain room-number strings and housekeeper user IDs).
+         */
+        DirtyRoomImportRequest: {
+            /** Rooms */
+            rooms?: string[];
+            /** Housekeeper Ids */
+            housekeeper_ids?: string[];
+            /** @default normal */
+            priority: components["schemas"]["TaskPriority"];
+        };
+        /** DirtyRoomImportResponse */
+        DirtyRoomImportResponse: {
+            /** Rooms Set Dirty */
+            rooms_set_dirty: number;
+            /** Tasks Created */
+            tasks_created: number;
+            /** Skipped */
+            skipped: components["schemas"]["ImportSkip"][];
+            /** Assignments */
+            assignments: components["schemas"]["ImportAssignment"][];
+        };
+        /** ForgotPasswordRequest */
+        ForgotPasswordRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -550,6 +771,28 @@ export interface components {
             /** Address */
             address?: string | null;
         };
+        /** ImportAssignment */
+        ImportAssignment: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** Tasks Assigned */
+            tasks_assigned: number;
+        };
+        /** ImportSkip */
+        ImportSkip: {
+            /** Room Number */
+            room_number: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "existing_open_task" | "out_of_service";
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -568,6 +811,30 @@ export interface components {
             new_password: string;
         };
         /**
+         * PmsDirtyRoomsRequest
+         * @description PMS path: deliberately permissive. `rooms` may be plain strings or objects
+         *     carrying a room number under any accepted alias; `housekeepers` are names.
+         *     The default adapter (app.services.pms_adapters) normalizes this.
+         */
+        PmsDirtyRoomsRequest: {
+            /** Rooms */
+            rooms?: unknown[];
+            /** Housekeepers */
+            housekeepers?: unknown[];
+            /** @default normal */
+            priority: components["schemas"]["TaskPriority"];
+        };
+        /**
+         * PreferencesUpdate
+         * @description Partial update of the current user's UI preferences.
+         */
+        PreferencesUpdate: {
+            /** Theme */
+            theme?: ("light" | "dark" | "system") | null;
+            /** Preferred Language */
+            preferred_language?: ("en" | "es") | null;
+        };
+        /**
          * RequestKind
          * @enum {string}
          */
@@ -583,6 +850,13 @@ export interface components {
          * @enum {string}
          */
         RequestStatus: "pending" | "approved" | "rejected";
+        /** ResetPasswordRequest */
+        ResetPasswordRequest: {
+            /** Token */
+            token: string;
+            /** New Password */
+            new_password: string;
+        };
         /**
          * RoomAddPayload
          * @description Proposed room for a `room`/`add` request.
@@ -803,8 +1077,16 @@ export interface components {
             role: components["schemas"]["UserRole"];
             /** Must Change Password */
             must_change_password: boolean;
-            theme: components["schemas"]["Theme"];
-            preferred_language: components["schemas"]["Language"];
+            /**
+             * Theme
+             * @enum {string}
+             */
+            theme: "light" | "dark" | "system";
+            /**
+             * Preferred Language
+             * @enum {string}
+             */
+            preferred_language: "en" | "es";
             /**
              * Created At
              * Format: date-time
@@ -821,21 +1103,6 @@ export interface components {
          * @enum {string}
          */
         UserRole: "admin" | "manager" | "housekeeper";
-        /**
-         * Theme
-         * @enum {string}
-         */
-        Theme: "light" | "dark" | "system";
-        /**
-         * Language
-         * @enum {string}
-         */
-        Language: "en" | "es";
-        /** PreferencesUpdate */
-        PreferencesUpdate: {
-            theme?: components["schemas"]["Theme"] | null;
-            preferred_language?: components["schemas"]["Language"] | null;
-        };
         /** UserUpdate */
         UserUpdate: {
             /** Email */
@@ -934,6 +1201,72 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    forgot_password_api_v1_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_password_api_v1_auth_reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
@@ -1476,6 +1809,41 @@ export interface operations {
             };
         };
     };
+    import_dirty_rooms_endpoint_api_v1_hotels__hotel_id__tasks_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirtyRoomImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirtyRoomImportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_task_api_v1_hotels__hotel_id__tasks__task_id__get: {
         parameters: {
             query?: never;
@@ -1733,6 +2101,135 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccessRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_api_keys_api_v1_hotels__hotel_id__api_keys_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_key_api_v1_hotels__hotel_id__api_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_api_key_api_v1_hotels__hotel_id__api_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pms_dirty_rooms_api_v1_integrations_pms_dirty_rooms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PmsDirtyRoomsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirtyRoomImportResponse"];
                 };
             };
             /** @description Validation Error */

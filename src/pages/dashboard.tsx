@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { RoomStatusControl } from '@/features/rooms/room-status-control'
+import { ImportDirtyRoomsButton } from '@/features/tasks/import-dirty-rooms-modal'
 import { PageHeader } from '@/components/page-header'
 import {
   PriorityBadge,
@@ -43,6 +44,7 @@ export function DashboardPage() {
       <PageHeader
         title={t('dashboard.title')}
         description={t('dashboard.subtitle')}
+        action={<ImportDirtyRoomsButton />}
       />
 
       <section className="flex flex-col gap-3">
