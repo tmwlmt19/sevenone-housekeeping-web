@@ -12,6 +12,7 @@ export const en = {
     submitRequest: 'Submit request',
     submitting: 'Submitting…',
     actions: 'Actions',
+    pendingRemoval: 'Pending removal',
     somethingWentWrong: 'Something went wrong',
     updateFailed: 'Update failed',
     overdue: 'Overdue',

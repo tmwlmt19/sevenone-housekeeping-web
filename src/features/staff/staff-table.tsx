@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table'
 import type { Staff } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
+import { usePendingRequests } from '@/lib/queries/access-requests'
 import { useStaff } from '@/lib/queries/staff'
 
 export function StaffTable() {
@@ -24,6 +25,11 @@ export function StaffTable() {
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
   const { data: staff, isLoading, isError, error } = useStaff()
+  // Pending requests shown inline (managers only — they file and track requests;
+  // other roles can't list them). Adds become new rows; removes flag the row.
+  const { data: pending } = usePendingRequests(isManager)
+  const pendingStaff = pending?.staffAdds ?? []
+  const removeIds = pending?.staffRemoveIds
   const [toRemove, setToRemove] = useState<Staff | null>(null)
 
   const colCount = isManager ? 4 : 3
@@ -64,7 +70,7 @@ export function StaffTable() {
               </TableRow>
             )}
 
-            {staff && staff.length === 0 && (
+            {staff && staff.length === 0 && pendingStaff.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={colCount}
@@ -86,16 +92,43 @@ export function StaffTable() {
                 </TableCell>
                 {isManager && (
                   <TableCell className="text-right">
-                    {member.id !== user?.id && member.role !== 'admin' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t('staffTable.requestRemoval')}
-                        onClick={() => setToRemove(member)}
-                      >
-                        <UserMinus className="size-4" />
-                      </Button>
+                    {removeIds?.has(member.id) ? (
+                      <Badge variant="outline">
+                        {t('common.pendingRemoval')}
+                      </Badge>
+                    ) : (
+                      member.id !== user?.id &&
+                      member.role !== 'admin' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t('staffTable.requestRemoval')}
+                          onClick={() => setToRemove(member)}
+                        >
+                          <UserMinus className="size-4" />
+                        </Button>
+                      )
                     )}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+
+            {/* Requested staff awaiting admin approval — read-only, flagged. */}
+            {pendingStaff.map(({ id, payload }) => (
+              <TableRow key={`pending-${id}`} className="text-muted-foreground">
+                <TableCell className="font-medium">{payload.name}</TableCell>
+                <TableCell>{payload.email}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {t(`enums.role.${payload.role}`)}
+                  </Badge>
+                </TableCell>
+                {isManager && (
+                  <TableCell className="text-right">
+                    <Badge variant="outline">
+                      {t('enums.requestStatus.pending')}
+                    </Badge>
                   </TableCell>
                 )}
               </TableRow>

@@ -14,6 +14,7 @@ export const es: Catalog = {
     submitRequest: 'Enviar solicitud',
     submitting: 'Enviando…',
     actions: 'Acciones',
+    pendingRemoval: 'Baja pendiente',
     somethingWentWrong: 'Algo salió mal',
     updateFailed: 'Error al actualizar',
     overdue: 'Vencida',
