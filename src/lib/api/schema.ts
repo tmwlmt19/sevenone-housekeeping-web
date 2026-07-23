@@ -226,6 +226,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/task-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Task Approval
+         * @description Toggle whether completing a task auto-approves (skips the manager sign-off
+         *     step). Hotel ops (manager/front-desk) own this, so it's not admin-gated like
+         *     the rest of hotel settings.
+         */
+        patch: operations["set_task_approval_api_v1_hotels__hotel_id__task_approval_patch"];
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}/users": {
         parameters: {
             query?: never;
@@ -391,10 +413,168 @@ export interface paths {
         head?: never;
         /**
          * Update Task Status
-         * @description Update only a task's status. Allowed for managers/admins, or the
-         *     housekeeper the task is assigned to.
+         * @description Update only a task's status.
+         *
+         *     Allowed for managers/front-desk/admins, or the housekeeper the task is
+         *     assigned to. Approval flow: when a housekeeper marks a task complete it goes
+         *     to `pending_approval` for manager/front-desk sign-off, unless the hotel has
+         *     `auto_approve_tasks` on (then it completes straight away). A task awaiting
+         *     approval is out of the housekeeper's hands — only a manager can move it (to
+         *     `completed` = approve, or back = reject).
          */
         patch: operations["update_task_status_api_v1_hotels__hotel_id__tasks__task_id__status_patch"];
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign Workload
+         * @description Call-in: move every open task from one housekeeper to a single other one.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    hotel_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReassignWorkload"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkloadMoveResponse"];
+                    };
+                };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HTTPValidationError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/clear-completed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear Completed Tasks
+         * @description Clear all completed tasks off the board (soft-archive).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    hotel_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClearCompletedResponse"];
+                    };
+                };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HTTPValidationError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/redistribute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redistribute Workload
+         * @description No-show: split one housekeeper's open tasks evenly across the others.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    hotel_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RedistributeWorkload"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkloadMoveResponse"];
+                    };
+                };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HTTPValidationError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/hotels/{hotel_id}/access-requests": {
@@ -753,6 +933,8 @@ export interface components {
             name: string;
             /** Address */
             address: string | null;
+            /** Auto Approve Tasks */
+            auto_approve_tasks: boolean;
             /**
              * Created At
              * Format: date-time
@@ -770,6 +952,8 @@ export interface components {
             name?: string | null;
             /** Address */
             address?: string | null;
+            /** Auto Approve Tasks */
+            auto_approve_tasks?: boolean | null;
         };
         /** ImportAssignment */
         ImportAssignment: {
@@ -901,6 +1085,8 @@ export interface components {
             /** Room Type */
             room_type: string | null;
             status: components["schemas"]["RoomStatus"];
+            /** Last Cleaned By */
+            last_cleaned_by: string | null;
             /**
              * Created At
              * Format: date-time
@@ -949,6 +1135,15 @@ export interface components {
             /** Name */
             name: string;
             role: components["schemas"]["UserRole"];
+        };
+        /**
+         * TaskApprovalSetting
+         * @description The per-hotel task auto-approve toggle. Settable by hotel ops
+         *     (manager/front-desk), not just platform admins.
+         */
+        TaskApprovalSetting: {
+            /** Auto Approve Tasks */
+            auto_approve_tasks: boolean;
         };
         /** TaskCreate */
         TaskCreate: {
@@ -1015,10 +1210,55 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "pending" | "assigned" | "in_progress" | "completed";
+        TaskStatus: "pending" | "assigned" | "in_progress" | "pending_approval" | "completed";
         /** TaskStatusUpdate */
         TaskStatusUpdate: {
             status: components["schemas"]["TaskStatus"];
+        };
+        /** ReassignWorkload */
+        ReassignWorkload: {
+            /**
+             * From Housekeeper Id
+             * Format: uuid
+             */
+            from_housekeeper_id: string;
+            /**
+             * To Housekeeper Id
+             * Format: uuid
+             */
+            to_housekeeper_id: string;
+        };
+        /** RedistributeWorkload */
+        RedistributeWorkload: {
+            /**
+             * From Housekeeper Id
+             * Format: uuid
+             */
+            from_housekeeper_id: string;
+        };
+        /** WorkloadAssignment */
+        WorkloadAssignment: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** Tasks Assigned */
+            tasks_assigned: number;
+        };
+        /** WorkloadMoveResponse */
+        WorkloadMoveResponse: {
+            /** Tasks Moved */
+            tasks_moved: number;
+            /** Assignments */
+            assignments: components["schemas"]["WorkloadAssignment"][];
+        };
+        /** ClearCompletedResponse */
+        ClearCompletedResponse: {
+            /** Cleared */
+            cleared: number;
         };
         /** TaskUpdate */
         TaskUpdate: {
@@ -1102,7 +1342,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "admin" | "manager" | "housekeeper";
+        UserRole: "admin" | "manager" | "front_desk" | "housekeeper";
         /** UserUpdate */
         UserUpdate: {
             /** Email */
@@ -1483,6 +1723,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["HotelUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HotelRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_task_approval_api_v1_hotels__hotel_id__task_approval_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskApprovalSetting"];
             };
         };
         responses: {

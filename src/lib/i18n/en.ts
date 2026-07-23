@@ -12,8 +12,10 @@ export const en = {
     submitRequest: 'Submit request',
     submitting: 'Submitting…',
     actions: 'Actions',
+    pendingRemoval: 'Pending removal',
     somethingWentWrong: 'Something went wrong',
     updateFailed: 'Update failed',
+    overdue: 'Overdue',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -39,10 +41,16 @@ export const en = {
       pending: 'Pending',
       assigned: 'Assigned',
       in_progress: 'In progress',
+      pending_approval: 'Pending approval',
       completed: 'Completed',
     },
     priority: { low: 'Low', normal: 'Normal', urgent: 'Urgent' },
-    role: { admin: 'Admin', manager: 'Manager', housekeeper: 'Housekeeper' },
+    role: {
+      admin: 'Admin',
+      manager: 'Manager',
+      front_desk: 'Front desk',
+      housekeeper: 'Housekeeper',
+    },
     requestKind: { add: 'Add', remove: 'Remove' },
     requestStatus: {
       pending: 'Pending',
@@ -108,6 +116,8 @@ export const en = {
     markComplete: 'Mark complete',
     start: 'Start',
     taskCompleted: 'Task completed',
+    submittedForApproval: 'Submitted for approval',
+    awaitingApproval: 'Awaiting manager approval',
     started: 'Started',
   },
   requests: {
@@ -141,6 +151,34 @@ export const en = {
     newTask: 'New task',
     assignee: 'Assignee',
     everyone: 'Everyone',
+    autoApprove: 'Auto-approve completed tasks',
+  },
+  workload: {
+    trigger: 'Move workload',
+    title: "Move a housekeeper's tasks",
+    description:
+      "Cover a housekeeper who called in or didn't show by moving their open tasks to someone else.",
+    from: 'Housekeeper who is out',
+    fromPlaceholder: 'Select a housekeeper',
+    to: 'Move their tasks to',
+    everyoneElse: 'Everyone else (split evenly)',
+    submit: 'Move tasks',
+    moving: 'Moving…',
+    moved_one: '{{count}} task moved',
+    moved_other: '{{count}} tasks moved',
+    failed: 'Could not move the tasks',
+    noHousekeepers: 'This hotel has no housekeepers yet.',
+  },
+  clearCompleted: {
+    trigger: 'Clear completed',
+    title: 'Clear completed tasks?',
+    description:
+      "This removes all completed tasks from the board. They're archived, not deleted, so history and 'last cleaned by' are kept.",
+    confirm: 'Clear',
+    cleared_one: '{{count}} completed task cleared',
+    cleared_other: '{{count}} completed tasks cleared',
+    none: 'No completed tasks to clear',
+    failed: 'Could not clear the tasks',
   },
   importRooms: {
     trigger: 'Import dirty rooms',
@@ -197,10 +235,14 @@ export const en = {
   taskCard: {
     room: 'Room {{label}}',
     due: 'Due {{date}}',
+    approve: 'Approve',
+    sendBack: 'Send back',
   },
   tasksBoard: {
     failedToLoad: 'Failed to load tasks',
     none: 'None',
+    approved: 'Task approved',
+    sentBack: 'Sent back to housekeeper',
   },
   taskForm: {
     editTitle: 'Edit task',

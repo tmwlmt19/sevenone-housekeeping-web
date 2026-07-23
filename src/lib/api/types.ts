@@ -31,6 +31,8 @@ export type RequestStatus = Schemas['RequestStatus']
 export type StaffAddPayload = Schemas['StaffAddPayload']
 export type RoomAddPayload = Schemas['RoomAddPayload']
 
+export type WorkloadMoveResponse = Schemas['WorkloadMoveResponse']
+
 export type Task = Schemas['TaskRead']
 export type TaskCreate = Schemas['TaskCreate']
 export type TaskUpdate = Schemas['TaskUpdate']
@@ -54,9 +56,15 @@ export const TASK_STATUSES: TaskStatus[] = [
   'pending',
   'assigned',
   'in_progress',
+  'pending_approval',
   'completed',
 ]
 
 export const TASK_PRIORITIES: TaskPriority[] = ['low', 'normal', 'urgent']
 
-export const USER_ROLES: UserRole[] = ['admin', 'manager', 'housekeeper']
+export const USER_ROLES: UserRole[] = [
+  'admin',
+  'manager',
+  'front_desk',
+  'housekeeper',
+]

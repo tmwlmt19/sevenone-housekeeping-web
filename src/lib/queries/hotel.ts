@@ -34,3 +34,20 @@ export function useUpdateHotel() {
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.hotel(hotelId) }),
   })
 }
+
+/** Toggle whether completing a task auto-approves (skips manager sign-off).
+ * Available to hotel ops (manager/front-desk), not just admins. */
+export function useSetAutoApprove() {
+  const hotelId = useHotelId()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (autoApprove: boolean) =>
+      unwrap(
+        await api.PATCH('/api/v1/hotels/{hotel_id}/task-approval', {
+          params: { path: { hotel_id: hotelId } },
+          body: { auto_approve_tasks: autoApprove },
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.hotel(hotelId) }),
+  })
+}

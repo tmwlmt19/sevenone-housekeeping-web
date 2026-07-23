@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/auth-context'
 import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
 import { RoomStatusControl } from '@/features/rooms/room-status-control'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/table'
 import { type Room } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
+import { usePendingRequests } from '@/lib/queries/access-requests'
 import { useRooms } from '@/lib/queries/rooms'
 
 export function RoomsTable() {
@@ -24,6 +26,11 @@ export function RoomsTable() {
   const { user } = useAuth()
   const isManager = user?.role === 'manager'
   const { data: rooms, isLoading, isError, error } = useRooms()
+  // Pending requests shown inline (managers only — they file and track requests;
+  // other roles can't list them). Adds become new rows; removes flag the row.
+  const { data: pending } = usePendingRequests(isManager)
+  const pendingRooms = pending?.roomAdds ?? []
+  const removeIds = pending?.roomRemoveIds
   const [toRemove, setToRemove] = useState<Room | null>(null)
 
   // Managers change status inline and can request removals; admins (rarely here)
@@ -67,7 +74,7 @@ export function RoomsTable() {
               </TableRow>
             )}
 
-            {rooms && rooms.length === 0 && (
+            {rooms && rooms.length === 0 && pendingRooms.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={colCount}
@@ -90,16 +97,39 @@ export function RoomsTable() {
                 </TableCell>
                 {isManager && (
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t('roomsTable.requestRemoval')}
-                      onClick={() => setToRemove(room)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    {removeIds?.has(room.id) ? (
+                      <Badge variant="outline">
+                        {t('common.pendingRemoval')}
+                      </Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('roomsTable.requestRemoval')}
+                        onClick={() => setToRemove(room)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 )}
+              </TableRow>
+            ))}
+
+            {/* Requested rooms awaiting admin approval — read-only, flagged. */}
+            {pendingRooms.map(({ id, payload }) => (
+              <TableRow key={`pending-${id}`} className="text-muted-foreground">
+                <TableCell className="font-medium">
+                  {payload.room_number}
+                </TableCell>
+                <TableCell>{payload.floor ?? '—'}</TableCell>
+                <TableCell>{payload.room_type ?? '—'}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">
+                    {t('enums.requestStatus.pending')}
+                  </Badge>
+                </TableCell>
+                {isManager && <TableCell />}
               </TableRow>
             ))}
           </TableBody>

@@ -10,17 +10,13 @@ import {
 } from '@/components/status-badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { Task, TaskPriority } from '@/lib/api/types'
+import type { Task } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
+import { compareTasks, effectivePriority, isOverdue } from '@/lib/tasks'
+import { cn } from '@/lib/utils'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
 import { useTasks } from '@/lib/queries/tasks'
-
-const PRIORITY_RANK: Record<TaskPriority, number> = {
-  urgent: 0,
-  normal: 1,
-  low: 2,
-}
 
 export function DashboardPage() {
   const { t } = useTranslation()
@@ -37,7 +33,7 @@ export function DashboardPage() {
 
   const openTasks = (tasks ?? [])
     .filter((t) => t.status !== 'completed')
-    .sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority])
+    .sort(compareTasks)
 
   return (
     <div className="flex flex-col gap-8">
@@ -163,14 +159,20 @@ function OpenTaskRow({
           <span className="font-medium">
             {t('dashboard.room', { label: roomLabel })}
           </span>
-          <span className="text-muted-foreground truncate text-sm">
+          <span
+            className={cn(
+              'truncate text-sm',
+              isOverdue(task) ? 'text-destructive' : 'text-muted-foreground',
+            )}
+          >
             {assignee ?? t('common.unassigned')}
             {task.due_date &&
               ` · ${t('dashboard.due', { date: formatDate(task.due_date) })}`}
+            {isOverdue(task) && ` · ${t('common.overdue')}`}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <PriorityBadge priority={task.priority} />
+          <PriorityBadge priority={effectivePriority(task)} />
           <TaskStatusBadge status={task.status} />
         </div>
       </Link>

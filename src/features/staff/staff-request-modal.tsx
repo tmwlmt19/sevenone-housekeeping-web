@@ -24,12 +24,12 @@ import { useFileRequest } from '@/lib/queries/access-requests'
 
 // Managers can't add staff directly; they file a request for a platform admin
 // to approve. No password here — it's generated when the admin approves.
-const HOTEL_ROLES: UserRole[] = ['manager', 'housekeeper']
+const HOTEL_ROLES: UserRole[] = ['manager', 'front_desk', 'housekeeper']
 
 type FormValues = {
   email: string
   name: string
-  role: 'manager' | 'housekeeper'
+  role: 'manager' | 'front_desk' | 'housekeeper'
   note: string
 }
 
@@ -47,7 +47,7 @@ export function StaffRequestModal() {
           .trim()
           .min(1, t('staffRequest.validation.required'))
           .max(255, t('staffRequest.validation.max255')),
-        role: z.enum(['manager', 'housekeeper']),
+        role: z.enum(['manager', 'front_desk', 'housekeeper']),
         note: z.string().trim().max(1000, t('staffRequest.validation.max1000')),
       }),
     [t],
