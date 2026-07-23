@@ -149,6 +149,29 @@ export const es: Catalog = {
     assignee: 'Responsable',
     everyone: 'Todos',
   },
+  importRooms: {
+    trigger: 'Importar habitaciones sucias',
+    title: 'Importar habitaciones sucias',
+    subtitle:
+      'Sube un CSV con números de habitación para marcarlas como sucias y crear una tarea de limpieza para cada una.',
+    chooseFile: 'Elegir CSV',
+    downloadTemplate: 'Plantilla',
+    parsedSummary: '{{file}} — {{count}} habitación(es) encontradas',
+    parseError: 'No se pudo leer el archivo. Sube un CSV válido.',
+    unknownRooms:
+      '{{count}} habitación(es) no encontradas en este hotel: {{rooms}}. Corrige el archivo y vuelve a subirlo.',
+    assignTo: 'Asignar a personal de limpieza',
+    assignHint:
+      'El personal seleccionado recibe una parte equitativa de las nuevas tareas. Déjalo vacío para importar sin asignar.',
+    noHousekeepers: 'Aún no hay personal de limpieza.',
+    splitPreview:
+      '≈ {{min}}–{{max}} tareas cada uno entre {{people}} persona(s).',
+    priority: 'Prioridad',
+    createTasks: 'Crear {{count}} tarea(s)',
+    importing: 'Importando…',
+    createdCount: '{{count}} tarea(s) creadas',
+    skippedCount: '{{count}} omitidas',
+  },
   notFound: {
     message: 'No se encontró esta página.',
     goHome: 'Ir al inicio',
