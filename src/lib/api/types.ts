@@ -54,4 +54,9 @@ export const TASK_STATUSES: TaskStatus[] = [
 
 export const TASK_PRIORITIES: TaskPriority[] = ['low', 'normal', 'urgent']
 
-export const USER_ROLES: UserRole[] = ['admin', 'manager', 'housekeeper']
+export const USER_ROLES: UserRole[] = [
+  'admin',
+  'manager',
+  'front_desk',
+  'housekeeper',
+]

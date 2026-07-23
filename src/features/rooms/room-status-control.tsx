@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
+import { isHotelOps } from '@/auth/types'
 import { RoomStatusBadge } from '@/components/status-badge'
 import {
   AlertDialog,
@@ -27,9 +28,9 @@ import { ROOM_STATUSES, type Room, type RoomStatus } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
 import { useUpdateRoomStatus } from '@/lib/queries/rooms'
 
-/** A room's status: an inline editor for managers (with a prompt to schedule
- * cleaning when a room is marked dirty) or a read-only badge for everyone else.
- * Shared by the rooms table and the dashboard. */
+/** A room's status: an inline editor for hotel ops — manager/front-desk — (with
+ * a prompt to schedule cleaning when a room is marked dirty) or a read-only
+ * badge for everyone else. Shared by the rooms table and the dashboard. */
 export function RoomStatusControl({
   room,
   triggerClassName,
@@ -43,7 +44,7 @@ export function RoomStatusControl({
   const updateStatus = useUpdateRoomStatus()
   const [promptOpen, setPromptOpen] = useState(false)
 
-  if (user?.role !== 'manager') {
+  if (!isHotelOps(user?.role)) {
     return <RoomStatusBadge status={room.status} />
   }
 
