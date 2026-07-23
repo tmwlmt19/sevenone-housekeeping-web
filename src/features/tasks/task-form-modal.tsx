@@ -35,7 +35,7 @@ const UNASSIGNED = 'unassigned'
 type FormValues = {
   room_id: string
   assigned_to: string
-  status: 'pending' | 'assigned' | 'in_progress' | 'completed'
+  status: 'pending' | 'assigned' | 'in_progress' | 'pending_approval' | 'completed'
   priority: 'low' | 'normal' | 'urgent'
   notes: string
   due_date: string
@@ -72,7 +72,13 @@ export function TaskFormModal() {
       z.object({
         room_id: z.string().min(1, t('taskForm.selectRoom')),
         assigned_to: z.string(),
-        status: z.enum(['pending', 'assigned', 'in_progress', 'completed']),
+        status: z.enum([
+          'pending',
+          'assigned',
+          'in_progress',
+          'pending_approval',
+          'completed',
+        ]),
         priority: z.enum(['low', 'normal', 'urgent']),
         notes: z.string(),
         due_date: z.string(),

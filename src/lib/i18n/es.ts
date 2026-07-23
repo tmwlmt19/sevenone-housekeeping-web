@@ -42,12 +42,14 @@ export const es: Catalog = {
       pending: 'Pendiente',
       assigned: 'Asignada',
       in_progress: 'En progreso',
+      pending_approval: 'Pendiente de aprobación',
       completed: 'Completada',
     },
     priority: { low: 'Baja', normal: 'Normal', urgent: 'Urgente' },
     role: {
       admin: 'Administrador',
       manager: 'Gerente',
+      front_desk: 'Recepción',
       housekeeper: 'Camarista',
     },
     requestKind: { add: 'Agregar', remove: 'Quitar' },
@@ -115,6 +117,8 @@ export const es: Catalog = {
     markComplete: 'Marcar completada',
     start: 'Iniciar',
     taskCompleted: 'Tarea completada',
+    submittedForApproval: 'Enviada para aprobación',
+    awaitingApproval: 'Esperando aprobación del gerente',
     started: 'Iniciada',
   },
   requests: {
@@ -149,6 +153,7 @@ export const es: Catalog = {
     newTask: 'Nueva tarea',
     assignee: 'Responsable',
     everyone: 'Todos',
+    autoApprove: 'Aprobar tareas completadas automáticamente',
   },
   notFound: {
     message: 'No se encontró esta página.',
@@ -183,10 +188,14 @@ export const es: Catalog = {
   taskCard: {
     room: 'Habitación {{label}}',
     due: 'Vence {{date}}',
+    approve: 'Aprobar',
+    sendBack: 'Devolver',
   },
   tasksBoard: {
     failedToLoad: 'Error al cargar las tareas',
     none: 'Ninguna',
+    approved: 'Tarea aprobada',
+    sentBack: 'Devuelta a la camarista',
   },
   taskForm: {
     editTitle: 'Editar tarea',

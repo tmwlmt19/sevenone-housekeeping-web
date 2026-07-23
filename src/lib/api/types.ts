@@ -17,8 +17,10 @@ export type StaffUpdate = Schemas['UserUpdate']
 export type UserRole = Schemas['UserRole']
 
 // UI preferences (persisted per-user).
-export type Theme = Schemas['Theme']
-export type Language = Schemas['Language']
+// The backend inlines these enums on UserRead rather than emitting named
+// component schemas, so derive them from the field types (keeps gen:api stable).
+export type Theme = NonNullable<Schemas['UserRead']['theme']>
+export type Language = NonNullable<Schemas['UserRead']['preferred_language']>
 
 // Access requests (manager → admin approval queue).
 export type AccessRequest = Schemas['AccessRequestRead']
@@ -46,6 +48,7 @@ export const TASK_STATUSES: TaskStatus[] = [
   'pending',
   'assigned',
   'in_progress',
+  'pending_approval',
   'completed',
 ]
 

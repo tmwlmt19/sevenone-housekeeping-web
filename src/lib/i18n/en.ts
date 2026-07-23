@@ -40,10 +40,16 @@ export const en = {
       pending: 'Pending',
       assigned: 'Assigned',
       in_progress: 'In progress',
+      pending_approval: 'Pending approval',
       completed: 'Completed',
     },
     priority: { low: 'Low', normal: 'Normal', urgent: 'Urgent' },
-    role: { admin: 'Admin', manager: 'Manager', housekeeper: 'Housekeeper' },
+    role: {
+      admin: 'Admin',
+      manager: 'Manager',
+      front_desk: 'Front desk',
+      housekeeper: 'Housekeeper',
+    },
     requestKind: { add: 'Add', remove: 'Remove' },
     requestStatus: {
       pending: 'Pending',
@@ -109,6 +115,8 @@ export const en = {
     markComplete: 'Mark complete',
     start: 'Start',
     taskCompleted: 'Task completed',
+    submittedForApproval: 'Submitted for approval',
+    awaitingApproval: 'Awaiting manager approval',
     started: 'Started',
   },
   requests: {
@@ -142,6 +150,7 @@ export const en = {
     newTask: 'New task',
     assignee: 'Assignee',
     everyone: 'Everyone',
+    autoApprove: 'Auto-approve completed tasks',
   },
   notFound: {
     message: 'This page could not be found.',
@@ -176,10 +185,14 @@ export const en = {
   taskCard: {
     room: 'Room {{label}}',
     due: 'Due {{date}}',
+    approve: 'Approve',
+    sendBack: 'Send back',
   },
   tasksBoard: {
     failedToLoad: 'Failed to load tasks',
     none: 'None',
+    approved: 'Task approved',
+    sentBack: 'Sent back to housekeeper',
   },
   taskForm: {
     editTitle: 'Edit task',

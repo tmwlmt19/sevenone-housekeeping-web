@@ -25,11 +25,21 @@ export function MyTasksPage() {
   const roomLabel = (roomId: string) =>
     rooms?.find((r) => r.id === roomId)?.room_number ?? '—'
 
-  function changeStatus(task: Task, status: TaskStatus, message: string) {
+  function changeStatus(task: Task, status: TaskStatus) {
     updateStatus.mutate(
       { taskId: task.id, status },
       {
-        onSuccess: () => toast.success(message),
+        onSuccess: (updated) => {
+          // Completing can route to pending_approval (unless the hotel
+          // auto-approves), so message off the actual resulting status.
+          const message =
+            updated.status === 'pending_approval'
+              ? t('myTasks.submittedForApproval')
+              : updated.status === 'in_progress'
+                ? t('myTasks.started')
+                : t('myTasks.taskCompleted')
+          toast.success(message)
+        },
         onError: (e) =>
           toast.error(
             e instanceof ApiError ? e.message : t('common.updateFailed'),
@@ -84,19 +94,20 @@ export function MyTasksPage() {
                 </div>
                 {task.notes && <p className="text-sm">{task.notes}</p>}
 
-                {task.status !== 'completed' && (
+                {task.status === 'pending_approval' && (
+                  <p className="text-muted-foreground text-sm">
+                    {t('myTasks.awaitingApproval')}
+                  </p>
+                )}
+                {(task.status === 'pending' ||
+                  task.status === 'assigned' ||
+                  task.status === 'in_progress') && (
                   <div className="flex gap-2">
                     {task.status === 'in_progress' ? (
                       <Button
                         className="flex-1"
                         disabled={isUpdating}
-                        onClick={() =>
-                          changeStatus(
-                            task,
-                            'completed',
-                            t('myTasks.taskCompleted'),
-                          )
-                        }
+                        onClick={() => changeStatus(task, 'completed')}
                       >
                         {t('myTasks.markComplete')}
                       </Button>
@@ -104,13 +115,7 @@ export function MyTasksPage() {
                       <Button
                         className="flex-1"
                         disabled={isUpdating}
-                        onClick={() =>
-                          changeStatus(
-                            task,
-                            'in_progress',
-                            t('myTasks.started'),
-                          )
-                        }
+                        onClick={() => changeStatus(task, 'in_progress')}
                       >
                         {t('myTasks.start')}
                       </Button>

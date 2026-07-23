@@ -55,6 +55,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forgot Password
+         * @description Start a self-service password reset.
+         *
+         *     Always returns the same generic 200 whether or not the email matches a
+         *     user, so the endpoint never reveals which addresses have accounts.
+         */
+        post: operations["forgot_password_api_v1_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Password
+         * @description Consume a reset token and set a new password.
+         */
+        post: operations["reset_password_api_v1_auth_reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -168,7 +211,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Hotel */
+        /**
+         * Get Hotel
+         * @description View a hotel's profile. Manager+ only — housekeepers have no feature that
+         *     needs it. Managers are scoped to their own hotel; admins are cross-tenant.
+         */
         get: operations["get_hotel_api_v1_hotels__hotel_id__get"];
         /** Update Hotel */
         put: operations["update_hotel_api_v1_hotels__hotel_id__put"];
@@ -177,6 +224,28 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/task-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Task Approval
+         * @description Toggle whether completing a task auto-approves (skips the manager sign-off
+         *     step). Hotel ops (manager/front-desk) own this, so it's not admin-gated like
+         *     the rest of hotel settings.
+         */
+        patch: operations["set_task_approval_api_v1_hotels__hotel_id__task_approval_patch"];
         trace?: never;
     };
     "/api/v1/hotels/{hotel_id}/users": {
@@ -321,8 +390,14 @@ export interface paths {
         head?: never;
         /**
          * Update Task Status
-         * @description Update only a task's status. Allowed for managers/admins, or the
-         *     housekeeper the task is assigned to.
+         * @description Update only a task's status.
+         *
+         *     Allowed for managers/front-desk/admins, or the housekeeper the task is
+         *     assigned to. Approval flow: when a housekeeper marks a task complete it goes
+         *     to `pending_approval` for manager/front-desk sign-off, unless the hotel has
+         *     `auto_approve_tasks` on (then it completes straight away). A task awaiting
+         *     approval is out of the housekeeper's hands — only a manager can move it (to
+         *     `completed` = approve, or back = reject).
          */
         patch: operations["update_task_status_api_v1_hotels__hotel_id__tasks__task_id__status_patch"];
         trace?: never;
@@ -487,6 +562,14 @@ export interface components {
             /** Decision Note */
             decision_note?: string | null;
         };
+        /** ForgotPasswordRequest */
+        ForgotPasswordRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -532,6 +615,8 @@ export interface components {
             name: string;
             /** Address */
             address: string | null;
+            /** Auto Approve Tasks */
+            auto_approve_tasks: boolean;
             /**
              * Created At
              * Format: date-time
@@ -549,6 +634,8 @@ export interface components {
             name?: string | null;
             /** Address */
             address?: string | null;
+            /** Auto Approve Tasks */
+            auto_approve_tasks?: boolean | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -568,6 +655,16 @@ export interface components {
             new_password: string;
         };
         /**
+         * PreferencesUpdate
+         * @description Partial update of the current user's UI preferences.
+         */
+        PreferencesUpdate: {
+            /** Theme */
+            theme?: ("light" | "dark" | "system") | null;
+            /** Preferred Language */
+            preferred_language?: ("en" | "es") | null;
+        };
+        /**
          * RequestKind
          * @enum {string}
          */
@@ -583,6 +680,13 @@ export interface components {
          * @enum {string}
          */
         RequestStatus: "pending" | "approved" | "rejected";
+        /** ResetPasswordRequest */
+        ResetPasswordRequest: {
+            /** Token */
+            token: string;
+            /** New Password */
+            new_password: string;
+        };
         /**
          * RoomAddPayload
          * @description Proposed room for a `room`/`add` request.
@@ -627,6 +731,8 @@ export interface components {
             /** Room Type */
             room_type: string | null;
             status: components["schemas"]["RoomStatus"];
+            /** Last Cleaned By */
+            last_cleaned_by: string | null;
             /**
              * Created At
              * Format: date-time
@@ -675,6 +781,15 @@ export interface components {
             /** Name */
             name: string;
             role: components["schemas"]["UserRole"];
+        };
+        /**
+         * TaskApprovalSetting
+         * @description The per-hotel task auto-approve toggle. Settable by hotel ops
+         *     (manager/front-desk), not just platform admins.
+         */
+        TaskApprovalSetting: {
+            /** Auto Approve Tasks */
+            auto_approve_tasks: boolean;
         };
         /** TaskCreate */
         TaskCreate: {
@@ -741,7 +856,7 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "pending" | "assigned" | "in_progress" | "completed";
+        TaskStatus: "pending" | "assigned" | "in_progress" | "pending_approval" | "completed";
         /** TaskStatusUpdate */
         TaskStatusUpdate: {
             status: components["schemas"]["TaskStatus"];
@@ -803,8 +918,16 @@ export interface components {
             role: components["schemas"]["UserRole"];
             /** Must Change Password */
             must_change_password: boolean;
-            theme: components["schemas"]["Theme"];
-            preferred_language: components["schemas"]["Language"];
+            /**
+             * Theme
+             * @enum {string}
+             */
+            theme: "light" | "dark" | "system";
+            /**
+             * Preferred Language
+             * @enum {string}
+             */
+            preferred_language: "en" | "es";
             /**
              * Created At
              * Format: date-time
@@ -820,22 +943,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "admin" | "manager" | "housekeeper";
-        /**
-         * Theme
-         * @enum {string}
-         */
-        Theme: "light" | "dark" | "system";
-        /**
-         * Language
-         * @enum {string}
-         */
-        Language: "en" | "es";
-        /** PreferencesUpdate */
-        PreferencesUpdate: {
-            theme?: components["schemas"]["Theme"] | null;
-            preferred_language?: components["schemas"]["Language"] | null;
-        };
+        UserRole: "admin" | "manager" | "front_desk" | "housekeeper";
         /** UserUpdate */
         UserUpdate: {
             /** Email */
@@ -934,6 +1042,72 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    forgot_password_api_v1_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_password_api_v1_auth_reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
@@ -1150,6 +1324,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["HotelUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HotelRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_task_approval_api_v1_hotels__hotel_id__task_approval_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskApprovalSetting"];
             };
         };
         responses: {
