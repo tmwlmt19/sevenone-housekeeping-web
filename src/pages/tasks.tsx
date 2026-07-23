@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ClearCompletedButton } from '@/features/tasks/clear-completed-button'
+import { ImportDirtyRoomsButton } from '@/features/tasks/import-dirty-rooms-modal'
 import { TasksBoard } from '@/features/tasks/tasks-board'
 import { WorkloadDialog } from '@/features/tasks/workload-dialog'
 import { useHotel, useSetAutoApprove } from '@/lib/queries/hotel'
@@ -33,12 +34,15 @@ export function TasksPage() {
         title={t('tasksPage.title')}
         description={t('tasksPage.subtitle')}
         action={
-          <Button asChild>
-            <Link to="/tasks/new">
-              <Plus className="size-4" />
-              {t('tasksPage.newTask')}
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ImportDirtyRoomsButton />
+            <Button asChild>
+              <Link to="/tasks/new">
+                <Plus className="size-4" />
+                {t('tasksPage.newTask')}
+              </Link>
+            </Button>
+          </div>
         }
       />
 

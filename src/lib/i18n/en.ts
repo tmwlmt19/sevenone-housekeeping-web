@@ -180,6 +180,28 @@ export const en = {
     none: 'No completed tasks to clear',
     failed: 'Could not clear the tasks',
   },
+  importRooms: {
+    trigger: 'Import dirty rooms',
+    title: 'Import dirty rooms',
+    subtitle:
+      'Upload a CSV of room numbers to mark them dirty and create a cleaning task for each.',
+    chooseFile: 'Choose CSV',
+    downloadTemplate: 'Template',
+    parsedSummary: '{{file}} — {{count}} room(s) found',
+    parseError: 'Could not read that file. Please upload a valid CSV.',
+    unknownRooms:
+      '{{count}} room(s) not found in this hotel: {{rooms}}. Fix your file and re-upload.',
+    assignTo: 'Assign to housekeepers',
+    assignHint:
+      'Selected housekeepers get an even share of the new tasks. Leave empty to import unassigned.',
+    noHousekeepers: 'No housekeepers on staff yet.',
+    splitPreview: '≈ {{min}}–{{max}} tasks each across {{people}} housekeeper(s).',
+    priority: 'Priority',
+    createTasks: 'Create {{count}} task(s)',
+    importing: 'Importing…',
+    createdCount: '{{count}} task(s) created',
+    skippedCount: '{{count}} skipped',
+  },
   notFound: {
     message: 'This page could not be found.',
     goHome: 'Go home',

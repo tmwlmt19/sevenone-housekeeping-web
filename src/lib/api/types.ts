@@ -16,9 +16,9 @@ export type Staff = Schemas['UserRead']
 export type StaffUpdate = Schemas['UserUpdate']
 export type UserRole = Schemas['UserRole']
 
-// UI preferences (persisted per-user).
-// The backend inlines these enums on UserRead rather than emitting named
-// component schemas, so derive them from the field types (keeps gen:api stable).
+// UI preferences (persisted per-user). The backend inlines these enums on
+// UserRead rather than emitting named component schemas, so derive them from the
+// field types (keeps `pnpm gen:api` output stable).
 export type Theme = NonNullable<Schemas['UserRead']['theme']>
 export type Language = NonNullable<Schemas['UserRead']['preferred_language']>
 
@@ -38,6 +38,12 @@ export type TaskCreate = Schemas['TaskCreate']
 export type TaskUpdate = Schemas['TaskUpdate']
 export type TaskStatus = Schemas['TaskStatus']
 export type TaskPriority = Schemas['TaskPriority']
+
+// Bulk "dirty room" task import (PMS + CSV).
+export type DirtyRoomImportRequest = Schemas['DirtyRoomImportRequest']
+export type DirtyRoomImportResponse = Schemas['DirtyRoomImportResponse']
+export type ImportAssignment = Schemas['ImportAssignment']
+export type ImportSkip = Schemas['ImportSkip']
 
 export const ROOM_STATUSES: RoomStatus[] = [
   'clean',

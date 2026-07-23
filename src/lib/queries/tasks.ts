@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/lib/api/client'
-import type { TaskCreate, TaskStatus, TaskUpdate } from '@/lib/api/types'
+import type {
+  DirtyRoomImportRequest,
+  TaskCreate,
+  TaskStatus,
+  TaskUpdate,
+} from '@/lib/api/types'
 import { unwrap } from '@/lib/api/unwrap'
 
 import { qk, type TaskFilters } from './keys'
@@ -44,6 +49,23 @@ export function useCreateTask() {
     mutationFn: async (body: TaskCreate) =>
       unwrap(
         await api.POST('/api/v1/hotels/{hotel_id}/tasks', {
+          params: { path: { hotel_id: hotelId } },
+          body,
+        }),
+      ),
+    onSuccess: invalidate,
+  })
+}
+
+/** Bulk-import dirty rooms: set them dirty, create a task each, and optionally
+ * split the new tasks evenly across the chosen housekeepers. */
+export function useImportDirtyRooms() {
+  const hotelId = useHotelId()
+  const invalidate = useInvalidateTaskData()
+  return useMutation({
+    mutationFn: async (body: DirtyRoomImportRequest) =>
+      unwrap(
+        await api.POST('/api/v1/hotels/{hotel_id}/tasks/import', {
           params: { path: { hotel_id: hotelId } },
           body,
         }),
