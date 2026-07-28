@@ -18,6 +18,8 @@ export const es: Catalog = {
     somethingWentWrong: 'Algo salió mal',
     updateFailed: 'Error al actualizar',
     overdue: 'Vencida',
+    viewDetails: 'Ver detalles',
+    unknown: 'Desconocido',
   },
   nav: {
     dashboard: 'Panel',
@@ -223,6 +225,13 @@ export const es: Catalog = {
     roomStatusAria: 'Estado de la habitación',
     failedUpdateStatus: 'Error al actualizar el estado',
   },
+  roomDetails: {
+    title: 'Habitación {{number}}',
+    subtitle: 'Detalles de la habitación',
+    lastCleanedBy: 'Limpiada por última vez por',
+    notCleanedYet: 'Aún no se ha limpiado',
+    added: 'Agregada',
+  },
   dirtyRoomPrompt: {
     title: '¿Programar limpieza?',
     description:
@@ -237,6 +246,13 @@ export const es: Catalog = {
     noStaff: 'Aún no hay personal.',
     failedToLoad: 'Error al cargar el personal',
     requestRemoval: 'Solicitar eliminación',
+  },
+  staffDetails: {
+    subtitle: 'Detalles del personal',
+    accountStatus: 'Estado de la cuenta',
+    active: 'Activa',
+    awaitingFirstSignIn: 'Pendiente del primer inicio de sesión',
+    added: 'Agregado',
   },
   taskCard: {
     room: 'Habitación {{label}}',
