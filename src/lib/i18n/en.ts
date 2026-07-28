@@ -162,6 +162,8 @@ export const en = {
     fromPlaceholder: 'Select a housekeeper',
     to: 'Move their tasks to',
     everyoneElse: 'Everyone else (split evenly)',
+    toHint:
+      'Pick one to hand it all over, several to spread across them, or none to split across everyone.',
     submit: 'Move tasks',
     moving: 'Moving…',
     moved_one: '{{count}} task moved',

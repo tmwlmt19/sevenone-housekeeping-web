@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { ChevronDown, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -13,6 +13,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -23,42 +29,49 @@ import {
 } from '@/components/ui/select'
 import type { WorkloadMoveResponse } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/unwrap'
-import {
-  useReassignWorkload,
-  useRedistributeWorkload,
-} from '@/lib/queries/tasks'
+import { useRedistributeWorkload } from '@/lib/queries/tasks'
 import { useStaff } from '@/lib/queries/staff'
-
-/** "Everyone else (split evenly)" sentinel for the To select. */
-const SPLIT = '__split__'
 
 /**
  * Move a housekeeper's open tasks when they call in or don't show. Pick who's
- * out ("From"); "To" is either a single covering housekeeper (reassign) or
- * everyone else, split evenly (redistribute). Available to hotel ops.
+ * out ("From"), then pick who covers ("To"): choose one housekeeper to hand it
+ * all to, several to spread it across, or none to split it evenly across
+ * everyone else. Available to hotel ops.
  */
 export function WorkloadDialog() {
   const { t } = useTranslation()
   const { data: staff } = useStaff()
-  const reassign = useReassignWorkload()
   const redistribute = useRedistributeWorkload()
 
   const [open, setOpen] = useState(false)
   const [from, setFrom] = useState('')
-  const [to, setTo] = useState(SPLIT)
+  // Chosen covering housekeepers. Empty = spread across everyone else.
+  const [to, setTo] = useState<string[]>([])
 
   const housekeepers = useMemo(
     () => (staff ?? []).filter((s) => s.role === 'housekeeper'),
     [staff],
   )
-  // Can't reassign onto the person who's out.
+  // Can't hand tasks back to the person who's out.
   const targets = housekeepers.filter((h) => h.id !== from)
-  const pending = reassign.isPending || redistribute.isPending
+  const pending = redistribute.isPending
 
   const reset = () => {
     setFrom('')
-    setTo(SPLIT)
+    setTo([])
   }
+
+  const toggleTarget = (id: string) =>
+    setTo((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+
+  // Trigger label: the chosen names, or the "everyone else" default when empty.
+  const toLabel = useMemo(() => {
+    if (to.length === 0) return t('workload.everyoneElse')
+    const byId = new Map(housekeepers.map((h) => [h.id, h.name]))
+    return to.map((id) => byId.get(id) ?? '').join(', ')
+  }, [to, housekeepers, t])
 
   const onDone = (result: WorkloadMoveResponse) => {
     toast.success(t('workload.moved', { count: result.tasks_moved }))
@@ -70,17 +83,14 @@ export function WorkloadDialog() {
 
   const submit = () => {
     if (!from) return
-    if (to === SPLIT) {
-      redistribute.mutate(
-        { from_housekeeper_id: from },
-        { onSuccess: onDone, onError },
-      )
-    } else {
-      reassign.mutate(
-        { from_housekeeper_id: from, to_housekeeper_id: to },
-        { onSuccess: onDone, onError },
-      )
-    }
+    redistribute.mutate(
+      {
+        from_housekeeper_id: from,
+        // Omit when empty so the backend spreads across everyone else.
+        to_housekeeper_ids: to.length > 0 ? to : undefined,
+      },
+      { onSuccess: onDone, onError },
+    )
   }
 
   return (
@@ -115,8 +125,8 @@ export function WorkloadDialog() {
                 value={from}
                 onValueChange={(v) => {
                   setFrom(v)
-                  // Keep To valid if it now points at the person who's out.
-                  if (v === to) setTo(SPLIT)
+                  // Keep targets valid: drop the newly-out person if selected.
+                  setTo((prev) => prev.filter((id) => id !== v))
                 }}
               >
                 <SelectTrigger>
@@ -134,21 +144,36 @@ export function WorkloadDialog() {
 
             <div className="flex flex-col gap-2">
               <Label>{t('workload.to')}</Label>
-              <Select value={to} onValueChange={setTo} disabled={!from}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={SPLIT}>
-                    {t('workload.everyoneElse')}
-                  </SelectItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild disabled={!from}>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                  >
+                    <span className="truncate">{toLabel}</span>
+                    <ChevronDown className="size-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-[var(--radix-dropdown-menu-trigger-width)]"
+                >
                   {targets.map((h) => (
-                    <SelectItem key={h.id} value={h.id}>
+                    <DropdownMenuCheckboxItem
+                      key={h.id}
+                      checked={to.includes(h.id)}
+                      // Keep the menu open while picking several.
+                      onSelect={(e) => e.preventDefault()}
+                      onCheckedChange={() => toggleTarget(h.id)}
+                    >
                       {h.name}
-                    </SelectItem>
+                    </DropdownMenuCheckboxItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <p className="text-muted-foreground text-xs">
+                {t('workload.toHint')}
+              </p>
             </div>
           </div>
         )}
