@@ -1235,6 +1235,8 @@ export interface components {
              * Format: uuid
              */
             from_housekeeper_id: string;
+            /** To Housekeeper Ids */
+            to_housekeeper_ids?: string[] | null;
         };
         /** WorkloadAssignment */
         WorkloadAssignment: {

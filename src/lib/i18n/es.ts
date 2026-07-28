@@ -165,6 +165,8 @@ export const es: Catalog = {
     fromPlaceholder: 'Selecciona una camarista',
     to: 'Mover sus tareas a',
     everyoneElse: 'El resto (repartir equitativamente)',
+    toHint:
+      'Elige una persona para pasárselo todo, varias para repartirlo entre ellas, o ninguna para repartirlo entre todas.',
     submit: 'Mover tareas',
     moving: 'Moviendo…',
     moved_one: '{{count}} tarea movida',

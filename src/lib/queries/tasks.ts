@@ -114,12 +114,19 @@ export function useReassignWorkload() {
   })
 }
 
-/** No-show: split one housekeeper's open tasks evenly across the others. */
+/**
+ * No-show: split one housekeeper's open tasks across the covering housekeepers.
+ * Omit `to_housekeeper_ids` (or send an empty list) to spread across everyone
+ * else; name a subset to spread across just them; name one to hand it all over.
+ */
 export function useRedistributeWorkload() {
   const hotelId = useHotelId()
   const invalidate = useInvalidateTaskData()
   return useMutation({
-    mutationFn: async (body: { from_housekeeper_id: string }) =>
+    mutationFn: async (body: {
+      from_housekeeper_id: string
+      to_housekeeper_ids?: string[]
+    }) =>
       unwrap(
         await api.POST('/api/v1/hotels/{hotel_id}/tasks/redistribute', {
           params: { path: { hotel_id: hotelId } },
