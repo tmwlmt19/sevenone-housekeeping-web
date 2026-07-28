@@ -1,9 +1,10 @@
-import { Trash2 } from 'lucide-react'
+import { Info, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '@/auth/auth-context'
 import { RequestRemovalDialog } from '@/features/access-requests/request-removal-dialog'
+import { RoomDetailsDialog } from '@/features/rooms/room-details-dialog'
 import { RoomStatusControl } from '@/features/rooms/room-status-control'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,10 +33,11 @@ export function RoomsTable() {
   const pendingRooms = pending?.roomAdds ?? []
   const removeIds = pending?.roomRemoveIds
   const [toRemove, setToRemove] = useState<Room | null>(null)
+  const [detail, setDetail] = useState<Room | null>(null)
 
-  // Managers change status inline and can request removals; admins (rarely here)
-  // just view. Only managers get the actions column.
-  const colCount = isManager ? 5 : 4
+  // Everyone who can see this page gets an actions column: a read-only details
+  // button for all, plus (managers only) inline status + removal requests.
+  const colCount = 5
 
   return (
     <>
@@ -47,11 +49,9 @@ export function RoomsTable() {
               <TableHead>{t('roomsTable.floor')}</TableHead>
               <TableHead>{t('roomsTable.type')}</TableHead>
               <TableHead>{t('roomsTable.status')}</TableHead>
-              {isManager && (
-                <TableHead className="w-24 text-right">
-                  {t('common.actions')}
-                </TableHead>
-              )}
+              <TableHead className="w-24 text-right">
+                {t('common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,24 +95,33 @@ export function RoomsTable() {
                 <TableCell>
                   <RoomStatusControl room={room} />
                 </TableCell>
-                {isManager && (
-                  <TableCell className="text-right">
-                    {removeIds?.has(room.id) ? (
-                      <Badge variant="outline">
-                        {t('common.pendingRemoval')}
-                      </Badge>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t('roomsTable.requestRemoval')}
-                        onClick={() => setToRemove(room)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                  </TableCell>
-                )}
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t('common.viewDetails')}
+                      onClick={() => setDetail(room)}
+                    >
+                      <Info className="size-4" />
+                    </Button>
+                    {isManager &&
+                      (removeIds?.has(room.id) ? (
+                        <Badge variant="outline">
+                          {t('common.pendingRemoval')}
+                        </Badge>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t('roomsTable.requestRemoval')}
+                          onClick={() => setToRemove(room)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      ))}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
 
@@ -129,7 +138,7 @@ export function RoomsTable() {
                     {t('enums.requestStatus.pending')}
                   </Badge>
                 </TableCell>
-                {isManager && <TableCell />}
+                <TableCell />
               </TableRow>
             ))}
           </TableBody>
@@ -146,6 +155,8 @@ export function RoomsTable() {
         }
         onClose={() => setToRemove(null)}
       />
+
+      <RoomDetailsDialog room={detail} onClose={() => setDetail(null)} />
     </>
   )
 }

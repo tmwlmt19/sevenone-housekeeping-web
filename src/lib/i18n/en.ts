@@ -16,6 +16,8 @@ export const en = {
     somethingWentWrong: 'Something went wrong',
     updateFailed: 'Update failed',
     overdue: 'Overdue',
+    viewDetails: 'View details',
+    unknown: 'Unknown',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -219,6 +221,13 @@ export const en = {
     roomStatusAria: 'Room status',
     failedUpdateStatus: 'Failed to update status',
   },
+  roomDetails: {
+    title: 'Room {{number}}',
+    subtitle: 'Room details',
+    lastCleanedBy: 'Last cleaned by',
+    notCleanedYet: 'Not cleaned yet',
+    added: 'Added',
+  },
   dirtyRoomPrompt: {
     title: 'Schedule cleaning?',
     description:
@@ -233,6 +242,13 @@ export const en = {
     noStaff: 'No staff yet.',
     failedToLoad: 'Failed to load staff',
     requestRemoval: 'Request removal',
+  },
+  staffDetails: {
+    subtitle: 'Staff details',
+    accountStatus: 'Account status',
+    active: 'Active',
+    awaitingFirstSignIn: 'Awaiting first sign-in',
+    added: 'Added',
   },
   taskCard: {
     room: 'Room {{label}}',
