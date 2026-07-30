@@ -45,6 +45,8 @@ export const en = {
     trayHint: 'Tap a room, then tap the map to place it.',
     placeHint: 'Tap the map to drop the room.',
     reset: 'Reset',
+    rotate: 'Rotate',
+    feet: '{{value}} ft',
     unplaceRoom: 'Unplace {{room}}',
     unsaved: 'Unsaved changes',
     saved: 'Floor map saved',

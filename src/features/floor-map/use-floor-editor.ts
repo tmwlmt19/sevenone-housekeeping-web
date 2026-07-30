@@ -10,6 +10,7 @@ const DEFAULT_W = 120
 const DEFAULT_H = 60
 const DEFAULT_ROOM_W = 12
 const DEFAULT_ROOM_H = 16
+const MIN_ROOM = 4
 
 export interface DraftPlacement {
   x: number
@@ -92,6 +93,50 @@ export function useFloorEditor(floor: FloorMap) {
     setDirty(true)
   }
 
+  /** Resize keeps the top-left fixed; clamps within the canvas and a min size. */
+  function resize(roomId: string, w: number, h: number) {
+    setPlacements((prev) => {
+      const cur = prev[roomId]
+      if (!cur) return prev
+      const nw = clamp(snap(w, grid), MIN_ROOM, Math.max(MIN_ROOM, width - cur.x))
+      const nh = clamp(snap(h, grid), MIN_ROOM, Math.max(MIN_ROOM, height - cur.y))
+      return { ...prev, [roomId]: { ...cur, w: nw, h: nh } }
+    })
+    setDirty(true)
+  }
+
+  /** Rotate 90° at a time; re-center so the rotated footprint stays on canvas. */
+  function rotate(roomId: string) {
+    setPlacements((prev) => {
+      const cur = prev[roomId]
+      if (!cur) return prev
+      const rotation = (cur.rotation + 90) % 360
+      const sideways = rotation % 180 === 90
+      const effW = sideways ? cur.h : cur.w
+      const effH = sideways ? cur.w : cur.h
+      const cx = clamp(
+        cur.x + cur.w / 2,
+        effW / 2,
+        Math.max(effW / 2, width - effW / 2),
+      )
+      const cy = clamp(
+        cur.y + cur.h / 2,
+        effH / 2,
+        Math.max(effH / 2, height - effH / 2),
+      )
+      return {
+        ...prev,
+        [roomId]: {
+          ...cur,
+          rotation,
+          x: snap(cx - cur.w / 2, grid),
+          y: snap(cy - cur.h / 2, grid),
+        },
+      }
+    })
+    setDirty(true)
+  }
+
   function unplace(roomId: string) {
     setPlacements((prev) => {
       if (!prev[roomId]) return prev
@@ -146,6 +191,8 @@ export function useFloorEditor(floor: FloorMap) {
     dirty,
     placeAt,
     move,
+    resize,
+    rotate,
     unplace,
     reset,
     markSaved,

@@ -1,4 +1,4 @@
-import { Save, Undo2, X } from 'lucide-react'
+import { RotateCw, Save, Undo2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -23,6 +23,7 @@ export function FloorMapEditor({
   const editor = useFloorEditor(floor)
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<{ roomId: string; dx: number; dy: number } | null>(null)
+  const resizeRef = useRef<{ roomId: string } | null>(null)
   const [armed, setArmed] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
 
@@ -63,17 +64,29 @@ export function FloorMapEditor({
     svgRef.current?.setPointerCapture(e.pointerId)
   }
 
+  function onResizePointerDown(e: React.PointerEvent, roomId: string) {
+    e.stopPropagation()
+    resizeRef.current = { roomId }
+    svgRef.current?.setPointerCapture(e.pointerId)
+  }
+
   function onPointerMove(e: React.PointerEvent) {
+    const { x, y } = at(e)
+    if (resizeRef.current) {
+      const p = editor.placements[resizeRef.current.roomId]
+      if (p) editor.resize(resizeRef.current.roomId, x - p.x, y - p.y)
+      return
+    }
     const drag = dragRef.current
     if (!drag) return
-    const { x, y } = at(e)
     editor.move(drag.roomId, x - drag.dx, y - drag.dy)
   }
 
   function onPointerUp(e: React.PointerEvent) {
-    if (dragRef.current) {
+    if (dragRef.current || resizeRef.current) {
       svgRef.current?.releasePointerCapture(e.pointerId)
       dragRef.current = null
+      resizeRef.current = null
     }
   }
 
@@ -87,6 +100,28 @@ export function FloorMapEditor({
   }
 
   const selectedRoom = editor.placedRooms.find((p) => p.room.id === selected)
+
+  // Upright, orientation-aware dimension labels for the selected room: the
+  // number on each side matches that side's on-screen length (footprint w/h
+  // swap when rotated 90°/270°).
+  const sel = selectedRoom?.placement
+  const dims = sel
+    ? (() => {
+        const sideways = sel.rotation % 180 === 90
+        const spanX = sideways ? sel.h : sel.w
+        const spanY = sideways ? sel.w : sel.h
+        const cx = sel.x + sel.w / 2
+        const cy = sel.y + sel.h / 2
+        return {
+          spanX,
+          spanY,
+          cx,
+          cy,
+          top: cy - spanY / 2,
+          left: cx - spanX / 2,
+        }
+      })()
+    : null
 
   return (
     <div className="space-y-3">
@@ -110,19 +145,29 @@ export function FloorMapEditor({
           {t('floorMap.reset')}
         </Button>
         {selectedRoom && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              editor.unplace(selectedRoom.room.id)
-              setSelected(null)
-            }}
-          >
-            <X className="size-4" />
-            {t('floorMap.unplaceRoom', {
-              room: selectedRoom.room.room_number,
-            })}
-          </Button>
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => editor.rotate(selectedRoom.room.id)}
+            >
+              <RotateCw className="size-4" />
+              {t('floorMap.rotate')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                editor.unplace(selectedRoom.room.id)
+                setSelected(null)
+              }}
+            >
+              <X className="size-4" />
+              {t('floorMap.unplaceRoom', {
+                room: selectedRoom.room.room_number,
+              })}
+            </Button>
+          </>
         )}
         {editor.dirty && (
           <span className="text-muted-foreground text-xs">
@@ -168,6 +213,47 @@ export function FloorMapEditor({
               onPointerDown={(e) => onRoomPointerDown(e, room.id)}
             />
           ))}
+
+          {/* Dimension labels for the selected room (in feet). */}
+          {dims && (
+            <g
+              className="fill-foreground pointer-events-none select-none"
+              fontSize={2.6}
+              fontWeight={600}
+            >
+              <text x={dims.cx} y={dims.top - 1} textAnchor="middle">
+                {t('floorMap.feet', { value: dims.spanX })}
+              </text>
+              <text
+                x={dims.left - 1}
+                y={dims.cy}
+                textAnchor="end"
+                dominantBaseline="central"
+              >
+                {t('floorMap.feet', { value: dims.spanY })}
+              </text>
+            </g>
+          )}
+
+          {/* Resize handle on the selected room (unrotated only). */}
+          {selectedRoom && selectedRoom.placement.rotation === 0 && (
+            <rect
+              x={
+                selectedRoom.placement.x + selectedRoom.placement.w - 1.25
+              }
+              y={
+                selectedRoom.placement.y + selectedRoom.placement.h - 1.25
+              }
+              width={2.5}
+              height={2.5}
+              rx={0.4}
+              className="fill-foreground stroke-background cursor-nwse-resize"
+              strokeWidth={0.3}
+              onPointerDown={(e) =>
+                onResizePointerDown(e, selectedRoom.room.id)
+              }
+            />
+          )}
         </svg>
 
         {/* Unplaced-rooms tray: tap to arm, then tap the map to drop. */}

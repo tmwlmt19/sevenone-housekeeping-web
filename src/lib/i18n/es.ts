@@ -48,6 +48,8 @@ export const es: Catalog = {
     trayHint: 'Toca una habitación y luego toca el plano para ubicarla.',
     placeHint: 'Toca el plano para colocar la habitación.',
     reset: 'Restablecer',
+    rotate: 'Rotar',
+    feet: '{{value}} ft',
     unplaceRoom: 'Quitar {{room}}',
     unsaved: 'Cambios sin guardar',
     saved: 'Plano de planta guardado',
