@@ -107,7 +107,14 @@ export function WorkloadDialog() {
           {t('workload.trigger')}
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent
+        // Lock the modal to the X button / Cancel only. Reassigning a workload
+        // is a multi-step selection; clicking away to dismiss the From/To
+        // dropdowns (or hitting Escape) used to close the whole dialog and lose
+        // the in-progress picks.
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{t('workload.title')}</DialogTitle>
           <DialogDescription>{t('workload.description')}</DialogDescription>
