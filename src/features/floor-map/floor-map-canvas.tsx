@@ -1,6 +1,12 @@
 import type { FloorMap } from '@/lib/api/types'
 
-import { DecorationShape, GridLines, RoomRect } from './canvas-parts'
+import {
+  DecorationShape,
+  FloorBackdrop,
+  HallBorders,
+  paddedViewBox,
+  RoomRect,
+} from './canvas-parts'
 
 // Fallback canvas extent (feet) for a floor that has rooms but no saved map yet,
 // so there's something to render before dimensions are set in the editor.
@@ -8,9 +14,9 @@ const DEFAULT_W = 120
 const DEFAULT_H = 60
 
 /**
- * Read-only render of one floor: the canvas outline, a light grid, decorations,
- * and every placed room colored by status. Geometry is integer feet; the SVG
- * viewBox is in feet so it scales crisply to any container width.
+ * Read-only render of one floor: the floor panel, a light grid, decorations, and
+ * every placed room colored by status. Geometry is integer feet; the SVG viewBox
+ * is in feet (with an edge buffer) so it scales crisply to any container width.
  */
 export function FloorMapCanvas({ floor }: { floor: FloorMap }) {
   const width = floor.width_ft ?? DEFAULT_W
@@ -18,17 +24,18 @@ export function FloorMapCanvas({ floor }: { floor: FloorMap }) {
 
   return (
     <svg
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={paddedViewBox(width, height)}
       preserveAspectRatio="xMidYMid meet"
-      className="bg-card h-auto w-full rounded-lg border"
+      className="bg-muted/20 h-auto w-full rounded-lg border"
       role="img"
       aria-label="Floor map"
     >
-      <GridLines width={width} height={height} />
+      <FloorBackdrop width={width} height={height} />
 
       {floor.decorations.map((deco) => (
         <DecorationShape key={deco.id} deco={deco} />
       ))}
+      <HallBorders decorations={floor.decorations} />
 
       {floor.rooms.map((room) =>
         room.placement ? (

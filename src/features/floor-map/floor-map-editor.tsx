@@ -1,14 +1,75 @@
-import { RotateCw, Save, Undo2, X } from 'lucide-react'
+import { RotateCcw, RotateCw, Save, Trash2, Undo2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import type { FloorMap, FloorMapWrite } from '@/lib/api/types'
+import { Input } from '@/components/ui/input'
+import { DECORATION_KINDS, type FloorMap, type FloorMapWrite } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
 
-import { DecorationShape, GridLines, RoomRect } from './canvas-parts'
-import { pointerToSvg } from './svg-coords'
-import { useFloorEditor } from './use-floor-editor'
+import {
+  DecorationShape,
+  FloorBackdrop,
+  HallBorders,
+  paddedViewBox,
+  RoomRect,
+} from './canvas-parts'
+import { pointerToSvg, snap } from './svg-coords'
+import { type ItemType, useFloorEditor } from './use-floor-editor'
+
+type Selected = Set<string> // keys: `room:<id>` / `deco:<key>`
+
+const selKey = (type: ItemType, id: string) => `${type}:${id}`
+function splitKey(key: string): [ItemType, string] {
+  const i = key.indexOf(':')
+  return [key.slice(0, i) as ItemType, key.slice(i + 1)]
+}
+
+/** Number field for a floor dimension: commits on blur / Enter, not per keystroke. */
+function FloorSizeField({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string
+  value: number
+  onCommit: (n: number) => void
+}) {
+  const [text, setText] = useState(String(value))
+  useEffect(() => setText(String(value)), [value])
+  function commit() {
+    const n = parseInt(text, 10)
+    if (Number.isFinite(n) && n > 0) onCommit(n)
+    else setText(String(value))
+  }
+  return (
+    <label className="text-muted-foreground flex items-center gap-1 text-xs">
+      {label}
+      <Input
+        type="number"
+        inputMode="numeric"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+        }}
+        className="h-8 w-20"
+      />
+    </label>
+  )
+}
 
 export function FloorMapEditor({
   floor,
@@ -22,64 +83,188 @@ export function FloorMapEditor({
   const { t } = useTranslation()
   const editor = useFloorEditor(floor)
   const svgRef = useRef<SVGSVGElement>(null)
-  const dragRef = useRef<{ roomId: string; dx: number; dy: number } | null>(null)
-  const resizeRef = useRef<{ roomId: string } | null>(null)
+  const dragRef = useRef<{
+    items: Array<{ type: ItemType; id: string; startX: number; startY: number }>
+    px: number
+    py: number
+  } | null>(null)
+  const resizeRef = useRef<{ type: ItemType; id: string } | null>(null)
+  const movedRef = useRef(false) // has the active gesture actually moved yet?
+  const lastArrowRef = useRef(0) // for coalescing arrow-key nudges into one undo
   const [armed, setArmed] = useState<string | null>(null)
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Selected>(new Set())
 
-  // Delete / Backspace unplaces the selected room.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
-        editor.unplace(selected)
-        setSelected(null)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [selected, editor])
+  const selectedKeys = [...selected]
+  const single = selectedKeys.length === 1 ? splitKey(selectedKeys[0]) : null
+  const selectedRoom =
+    single?.[0] === 'room'
+      ? (editor.placedRooms.find((p) => p.room.id === single[1]) ?? null)
+      : null
+  const selectedDeco =
+    single?.[0] === 'deco'
+      ? (editor.decorations.find((d) => d.key === single[1]) ?? null)
+      : null
+
+  const selGeom = selectedRoom
+    ? selectedRoom.placement
+    : selectedDeco
+      ? { x: selectedDeco.x, y: selectedDeco.y, w: selectedDeco.w, h: selectedDeco.h, rotation: 0 }
+      : null
 
   function at(e: React.PointerEvent) {
     return pointerToSvg(svgRef.current!, e.clientX, e.clientY)
   }
 
+  function geomOf(type: ItemType, id: string): { x: number; y: number } | null {
+    if (type === 'room') {
+      const p = editor.placements[id]
+      return p ? { x: p.x, y: p.y } : null
+    }
+    const d = editor.decorations.find((dd) => dd.key === id)
+    return d ? { x: d.x, y: d.y } : null
+  }
+
+  function removeSelected() {
+    if (selected.size === 0) return
+    editor.beginChange()
+    for (const key of selected) {
+      const [type, id] = splitKey(key)
+      if (type === 'room') editor.unplace(id)
+      else editor.removeDecoration(id)
+    }
+    setSelected(new Set())
+  }
+
+  // Keyboard: Delete removes the selection; arrows nudge it by one grid step.
+  // Neither fires while typing in a field.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (selected.size === 0) return
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault()
+        editor.beginChange()
+        for (const key of selected) {
+          const [type, id] = splitKey(key)
+          if (type === 'room') editor.unplace(id)
+          else editor.removeDecoration(id)
+        }
+        setSelected(new Set())
+        return
+      }
+      const step = editor.grid
+      const delta =
+        e.key === 'ArrowUp'
+          ? [0, -step]
+          : e.key === 'ArrowDown'
+            ? [0, step]
+            : e.key === 'ArrowLeft'
+              ? [-step, 0]
+              : e.key === 'ArrowRight'
+                ? [step, 0]
+                : null
+      if (!delta) return
+      e.preventDefault()
+      const now = Date.now()
+      if (now - lastArrowRef.current > 400) editor.beginChange()
+      lastArrowRef.current = now
+      const updates = [...selected]
+        .map((key) => {
+          const [type, id] = splitKey(key)
+          const g =
+            type === 'room'
+              ? editor.placements[id]
+              : (editor.decorations.find((dd) => dd.key === id) ?? null)
+          return g ? { type, id, x: g.x + delta[0], y: g.y + delta[1] } : null
+        })
+        .filter((u) => u !== null)
+      editor.moveItemsTo(updates)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selected, editor])
+
   function onCanvasPointerDown(e: React.PointerEvent) {
     if (armed) {
       const { x, y } = at(e)
+      editor.beginChange()
       editor.placeAt(armed, x, y)
-      setSelected(armed)
+      setSelected(new Set([selKey('room', armed)]))
       setArmed(null)
     } else {
-      setSelected(null)
+      setSelected(new Set())
     }
   }
 
-  function onRoomPointerDown(e: React.PointerEvent, roomId: string) {
-    if (armed) return
+  function onItemPointerDown(e: React.PointerEvent, type: ItemType, id: string) {
+    if (armed) return // let the click fall through to place the armed room
     e.stopPropagation()
-    setSelected(roomId)
+    const key = selKey(type, id)
+    if (e.shiftKey) {
+      // Toggle membership; don't start a drag.
+      setSelected((prev) => {
+        const next = new Set(prev)
+        if (next.has(key)) next.delete(key)
+        else next.add(key)
+        return next
+      })
+      return
+    }
+    // Drag the whole selection if this item is part of it, else just this item.
+    const dragKeys = selected.has(key) ? [...selected] : [key]
+    if (!selected.has(key)) setSelected(new Set([key]))
+    const items = dragKeys
+      .map((k) => {
+        const [t, i] = splitKey(k)
+        const g = geomOf(t, i)
+        return g ? { type: t, id: i, startX: g.x, startY: g.y } : null
+      })
+      .filter((it) => it !== null)
     const { x, y } = at(e)
-    const p = editor.placements[roomId]
-    dragRef.current = { roomId, dx: x - p.x, dy: y - p.y }
+    dragRef.current = { items, px: x, py: y }
+    movedRef.current = false
     svgRef.current?.setPointerCapture(e.pointerId)
   }
 
-  function onResizePointerDown(e: React.PointerEvent, roomId: string) {
+  function onResizePointerDown(e: React.PointerEvent, type: ItemType, id: string) {
     e.stopPropagation()
-    resizeRef.current = { roomId }
+    resizeRef.current = { type, id }
+    movedRef.current = false
     svgRef.current?.setPointerCapture(e.pointerId)
   }
 
   function onPointerMove(e: React.PointerEvent) {
+    const rz = resizeRef.current
+    const dr = dragRef.current
+    if (!rz && !dr) return
     const { x, y } = at(e)
-    if (resizeRef.current) {
-      const p = editor.placements[resizeRef.current.roomId]
-      if (p) editor.resize(resizeRef.current.roomId, x - p.x, y - p.y)
+    if (!movedRef.current) {
+      editor.beginChange() // one undo entry per gesture, only once it moves
+      movedRef.current = true
+    }
+    if (rz) {
+      if (rz.type === 'room') {
+        const p = editor.placements[rz.id]
+        if (p) editor.resize(rz.id, x - p.x, y - p.y)
+      } else {
+        const d = editor.decorations.find((dd) => dd.key === rz.id)
+        if (d) editor.resizeDecoration(rz.id, x - d.x, y - d.y)
+      }
       return
     }
-    const drag = dragRef.current
-    if (!drag) return
-    editor.move(drag.roomId, x - drag.dx, y - drag.dy)
+    if (dr) {
+      const sdx = snap(x - dr.px, editor.grid)
+      const sdy = snap(y - dr.py, editor.grid)
+      editor.moveItemsTo(
+        dr.items.map((it) => ({
+          type: it.type,
+          id: it.id,
+          x: it.startX + sdx,
+          y: it.startY + sdy,
+        })),
+      )
+    }
   }
 
   function onPointerUp(e: React.PointerEvent) {
@@ -95,33 +280,14 @@ export function FloorMapEditor({
       await onSave(editor.buildPayload())
       editor.markSaved()
     } catch {
-      // The parent surfaces the error toast; keep the draft so nothing is lost.
+      // Parent surfaces the error toast; keep the draft so nothing is lost.
     }
   }
 
-  const selectedRoom = editor.placedRooms.find((p) => p.room.id === selected)
-
-  // Upright, orientation-aware dimension labels for the selected room: the
-  // number on each side matches that side's on-screen length (footprint w/h
-  // swap when rotated 90°/270°).
-  const sel = selectedRoom?.placement
-  const dims = sel
-    ? (() => {
-        const sideways = sel.rotation % 180 === 90
-        const spanX = sideways ? sel.h : sel.w
-        const spanY = sideways ? sel.w : sel.h
-        const cx = sel.x + sel.w / 2
-        const cy = sel.y + sel.h / 2
-        return {
-          spanX,
-          spanY,
-          cx,
-          cy,
-          top: cy - spanY / 2,
-          left: cx - spanX / 2,
-        }
-      })()
-    : null
+  const showHandle =
+    (selectedRoom && selectedRoom.placement.rotation === 0) || !!selectedDeco
+  const handleType: ItemType = selectedRoom ? 'room' : 'deco'
+  const handleId = selectedRoom ? selectedRoom.room.id : (selectedDeco?.key ?? '')
 
   return (
     <div className="space-y-3">
@@ -135,40 +301,108 @@ export function FloorMapEditor({
           size="sm"
           variant="outline"
           onClick={() => {
-            editor.reset()
-            setSelected(null)
-            setArmed(null)
+            editor.undo()
+            setSelected(new Set())
           }}
-          disabled={!editor.dirty || saving}
+          disabled={!editor.canUndo || saving}
         >
           <Undo2 className="size-4" />
-          {t('floorMap.reset')}
+          {t('floorMap.undo')}
         </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="outline" disabled={!editor.dirty || saving}>
+              <RotateCcw className="size-4" />
+              {t('floorMap.reset')}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t('floorMap.resetConfirmTitle')}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('floorMap.resetConfirmBody')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  editor.reset()
+                  setSelected(new Set())
+                  setArmed(null)
+                }}
+              >
+                {t('floorMap.resetConfirmAction')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <span className="bg-border h-6 w-px" aria-hidden />
+        <FloorSizeField
+          label={t('floorMap.widthLabel')}
+          value={editor.width}
+          onCommit={(n) => {
+            editor.beginChange()
+            editor.setDimensions(n, editor.height)
+          }}
+        />
+        <FloorSizeField
+          label={t('floorMap.heightLabel')}
+          value={editor.height}
+          onCommit={(n) => {
+            editor.beginChange()
+            editor.setDimensions(editor.width, n)
+          }}
+        />
+
         {selectedRoom && (
           <>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => editor.rotate(selectedRoom.room.id)}
+              onClick={() => {
+                editor.beginChange()
+                editor.rotate(selectedRoom.room.id)
+              }}
             >
               <RotateCw className="size-4" />
               {t('floorMap.rotate')}
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                editor.unplace(selectedRoom.room.id)
-                setSelected(null)
-              }}
-            >
+            <Button size="sm" variant="ghost" onClick={removeSelected}>
               <X className="size-4" />
-              {t('floorMap.unplaceRoom', {
-                room: selectedRoom.room.room_number,
-              })}
+              {t('floorMap.unplaceRoom', { room: selectedRoom.room.room_number })}
             </Button>
           </>
         )}
+
+        {selectedDeco && (
+          <>
+            <Input
+              value={selectedDeco.label ?? ''}
+              onFocus={() => editor.beginChange()}
+              onChange={(e) =>
+                editor.setDecorationLabel(selectedDeco.key, e.target.value)
+              }
+              placeholder={t('floorMap.labelPlaceholder')}
+              className="h-8 w-40"
+            />
+            <Button size="sm" variant="ghost" onClick={removeSelected}>
+              <Trash2 className="size-4" />
+              {t('floorMap.deleteDecoration')}
+            </Button>
+          </>
+        )}
+
+        {selected.size > 1 && (
+          <Button size="sm" variant="ghost" onClick={removeSelected}>
+            <Trash2 className="size-4" />
+            {t('floorMap.removeSelected', { count: selected.size })}
+          </Button>
+        )}
+
         {editor.dirty && (
           <span className="text-muted-foreground text-xs">
             {t('floorMap.unsaved')}
@@ -179,10 +413,10 @@ export function FloorMapEditor({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <svg
           ref={svgRef}
-          viewBox={`0 0 ${editor.width} ${editor.height}`}
+          viewBox={paddedViewBox(editor.width, editor.height)}
           preserveAspectRatio="xMidYMid meet"
           className={cn(
-            'bg-card h-auto w-full rounded-lg border',
+            'bg-muted/20 h-auto w-full rounded-lg border',
             armed && 'cursor-crosshair',
           )}
           style={{ touchAction: 'none' }}
@@ -192,11 +426,52 @@ export function FloorMapEditor({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
         >
-          <GridLines width={editor.width} height={editor.height} />
+          <FloorBackdrop width={editor.width} height={editor.height} />
 
-          {floor.decorations.map((deco) => (
-            <DecorationShape key={deco.id} deco={deco} />
+          {editor.decorations.map((d) => (
+            <g
+              key={d.key}
+              className="cursor-grab"
+              onPointerDown={(e) => onItemPointerDown(e, 'deco', d.key)}
+            >
+              <DecorationShape
+                deco={{
+                  id: d.key,
+                  kind: d.kind,
+                  x: d.x,
+                  y: d.y,
+                  w: d.w,
+                  h: d.h,
+                  label: d.label,
+                }}
+              />
+              {/* Transparent hit area so even label-only decorations are grabbable. */}
+              <rect x={d.x} y={d.y} width={d.w} height={d.h} fill="transparent" />
+              {selected.has(selKey('deco', d.key)) && (
+                <rect
+                  x={d.x}
+                  y={d.y}
+                  width={d.w}
+                  height={d.h}
+                  rx={0.5}
+                  className="stroke-foreground fill-none"
+                  strokeWidth={0.4}
+                  strokeDasharray="1 1"
+                />
+              )}
+            </g>
           ))}
+          <HallBorders
+            decorations={editor.decorations.map((d) => ({
+              id: d.key,
+              kind: d.kind,
+              x: d.x,
+              y: d.y,
+              w: d.w,
+              h: d.h,
+              label: d.label,
+            }))}
+          />
 
           {editor.placedRooms.map(({ room, placement }) => (
             <RoomRect
@@ -208,88 +483,114 @@ export function FloorMapEditor({
               rotation={placement.rotation}
               status={room.status}
               roomNumber={room.room_number}
-              selected={room.id === selected}
+              selected={selected.has(selKey('room', room.id))}
               interactive
-              onPointerDown={(e) => onRoomPointerDown(e, room.id)}
+              onPointerDown={(e) => onItemPointerDown(e, 'room', room.id)}
             />
           ))}
 
-          {/* Dimension labels for the selected room (in feet). */}
-          {dims && (
-            <g
-              className="fill-foreground pointer-events-none select-none"
-              fontSize={2.6}
-              fontWeight={600}
-            >
-              <text x={dims.cx} y={dims.top - 1} textAnchor="middle">
-                {t('floorMap.feet', { value: dims.spanX })}
-              </text>
-              <text
-                x={dims.left - 1}
-                y={dims.cy}
-                textAnchor="end"
-                dominantBaseline="central"
-              >
-                {t('floorMap.feet', { value: dims.spanY })}
-              </text>
-            </g>
-          )}
+          {/* Dimension labels for a single selected element (in feet). */}
+          {selGeom &&
+            (() => {
+              const sideways = selGeom.rotation % 180 === 90
+              const spanX = sideways ? selGeom.h : selGeom.w
+              const spanY = sideways ? selGeom.w : selGeom.h
+              const cx = selGeom.x + selGeom.w / 2
+              const cy = selGeom.y + selGeom.h / 2
+              return (
+                <g
+                  className="fill-foreground pointer-events-none select-none"
+                  fontSize={2.6}
+                  fontWeight={600}
+                >
+                  <text x={cx} y={cy - spanY / 2 - 1} textAnchor="middle">
+                    {t('floorMap.feet', { value: spanX })}
+                  </text>
+                  <text
+                    x={cx - spanX / 2 - 1}
+                    y={cy}
+                    textAnchor="end"
+                    dominantBaseline="central"
+                  >
+                    {t('floorMap.feet', { value: spanY })}
+                  </text>
+                </g>
+              )
+            })()}
 
-          {/* Resize handle on the selected room (unrotated only). */}
-          {selectedRoom && selectedRoom.placement.rotation === 0 && (
+          {/* Resize handle on a single selected element (rooms only when unrotated). */}
+          {showHandle && selGeom && (
             <rect
-              x={
-                selectedRoom.placement.x + selectedRoom.placement.w - 1.25
-              }
-              y={
-                selectedRoom.placement.y + selectedRoom.placement.h - 1.25
-              }
+              x={selGeom.x + selGeom.w - 1.25}
+              y={selGeom.y + selGeom.h - 1.25}
               width={2.5}
               height={2.5}
               rx={0.4}
               className="fill-foreground stroke-background cursor-nwse-resize"
               strokeWidth={0.3}
-              onPointerDown={(e) =>
-                onResizePointerDown(e, selectedRoom.room.id)
-              }
+              onPointerDown={(e) => onResizePointerDown(e, handleType, handleId)}
             />
           )}
         </svg>
 
-        {/* Unplaced-rooms tray: tap to arm, then tap the map to drop. */}
-        <aside className="space-y-2">
-          <h3 className="text-sm font-medium">
-            {t('floorMap.unplacedHeading')}
-          </h3>
-          <p className="text-muted-foreground text-xs">
-            {armed ? t('floorMap.placeHint') : t('floorMap.trayHint')}
-          </p>
-          {editor.unplacedRooms.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              {t('floorMap.unplacedEmpty')}
-            </p>
-          ) : (
-            <ul className="flex flex-wrap gap-1.5">
-              {editor.unplacedRooms.map((room) => (
-                <li key={room.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setArmed((cur) => (cur === room.id ? null : room.id))
-                    }
-                    className={cn(
-                      'rounded-md border px-2 py-1 text-sm',
-                      armed === room.id
-                        ? 'bg-primary text-primary-foreground border-transparent'
-                        : 'bg-muted/40 hover:bg-muted',
-                    )}
-                  >
-                    {room.room_number}
-                  </button>
-                </li>
+        <aside className="space-y-4">
+          {/* Decoration palette */}
+          <div>
+            <h3 className="mb-2 text-sm font-medium">
+              {t('floorMap.addHeading')}
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {DECORATION_KINDS.map((kind) => (
+                <Button
+                  key={kind}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    editor.beginChange()
+                    setSelected(new Set([selKey('deco', editor.addDecoration(kind))]))
+                  }}
+                >
+                  {t(`floorMap.deco.${kind}`)}
+                </Button>
               ))}
-            </ul>
-          )}
+            </div>
+          </div>
+
+          {/* Unplaced-rooms tray: tap to arm, then tap the map to drop. */}
+          <div>
+            <h3 className="text-sm font-medium">
+              {t('floorMap.unplacedHeading')}
+            </h3>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {armed ? t('floorMap.placeHint') : t('floorMap.trayHint')}
+            </p>
+            {editor.unplacedRooms.length === 0 ? (
+              <p className="text-muted-foreground mt-2 text-sm">
+                {t('floorMap.unplacedEmpty')}
+              </p>
+            ) : (
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {editor.unplacedRooms.map((room) => (
+                  <li key={room.id}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setArmed((cur) => (cur === room.id ? null : room.id))
+                      }
+                      className={cn(
+                        'rounded-md border px-2 py-1 text-sm',
+                        armed === room.id
+                          ? 'bg-primary text-primary-foreground border-transparent'
+                          : 'bg-muted/40 hover:bg-muted',
+                      )}
+                    >
+                      {room.room_number}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </aside>
       </div>
     </div>
