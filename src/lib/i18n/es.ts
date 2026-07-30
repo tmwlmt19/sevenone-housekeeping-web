@@ -24,6 +24,7 @@ export const es: Catalog = {
   nav: {
     dashboard: 'Panel',
     rooms: 'Habitaciones',
+    floorMap: 'Plano',
     staff: 'Personal',
     tasks: 'Tareas',
     requests: 'Solicitudes',
@@ -33,6 +34,48 @@ export const es: Catalog = {
     housekeeping: 'Limpieza',
     toggleMenu: 'Alternar menú',
     closeMenu: 'Cerrar menú',
+  },
+  floorMap: {
+    title: 'Plano de planta',
+    subtitle:
+      'Ve el estado de las habitaciones por ubicación y planifica zonas de limpieza.',
+    smallScreenTitle: 'Ábrelo en una pantalla más grande',
+    smallScreenBody:
+      'El plano de planta está diseñado para tabletas y computadoras. Ábrelo en una pantalla de al menos 768px de ancho para usarlo.',
+    floorLabel: 'Piso {{floor}}',
+    noRooms:
+      'Ninguna habitación tiene piso asignado todavía. Asigna un piso a tus habitaciones para empezar a mapear.',
+    unplacedHeading: 'Habitaciones sin ubicar',
+    unplacedEmpty: 'Todas las habitaciones de este piso están ubicadas.',
+    roomHeading: 'Habitación {{number}}',
+    tapToInspect: 'Toca una habitación para cambiar su estado.',
+    trayHint: 'Toca una habitación y luego toca el plano para ubicarla.',
+    placeHint: 'Toca el plano para colocar la habitación.',
+    reset: 'Restablecer',
+    undo: 'Deshacer',
+    resetConfirmTitle: '¿Descartar todos los cambios?',
+    resetConfirmBody:
+      'Esto revierte el piso al último diseño guardado. Se perderán los cambios sin guardar.',
+    resetConfirmAction: 'Descartar cambios',
+    rotate: 'Rotar',
+    feet: '{{value}} ft',
+    widthLabel: 'Ancho (ft)',
+    heightLabel: 'Largo (ft)',
+    removeSelected: 'Eliminar {{count}} seleccionados',
+    unplaceRoom: 'Quitar {{room}}',
+    unsaved: 'Cambios sin guardar',
+    saved: 'Plano de planta guardado',
+    loadError: 'No se pudo cargar el plano de planta.',
+    addHeading: 'Añadir al plano',
+    labelPlaceholder: 'Etiqueta',
+    deleteDecoration: 'Eliminar',
+    deco: {
+      hall: 'Pasillo',
+      stairs: 'Escaleras',
+      elevator: 'Ascensor',
+      lobby: 'Vestíbulo',
+      label: 'Etiqueta',
+    },
   },
   enums: {
     roomStatus: {
@@ -144,6 +187,8 @@ export const es: Catalog = {
     title: 'Habitaciones',
     subtitle: 'Gestiona las habitaciones de tu hotel.',
     requestRoom: 'Solicitar habitación',
+    listView: 'Lista',
+    mapView: 'Plano',
   },
   staffPage: {
     title: 'Personal',

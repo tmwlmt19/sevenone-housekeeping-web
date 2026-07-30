@@ -7,6 +7,7 @@ import { StaffRequestModal } from '@/features/staff/staff-request-modal'
 import { TaskFormModal } from '@/features/tasks/task-form-modal'
 import { AccountPage } from '@/pages/account'
 import { DashboardPage } from '@/pages/dashboard'
+import { FloorMapPage } from '@/pages/floor-map'
 import { HotelSettingsPage } from '@/pages/hotel-settings'
 import { MyTasksPage } from '@/pages/my-tasks'
 import { NotFoundPage } from '@/pages/not-found'
@@ -34,6 +35,14 @@ export const router = createBrowserRouter([
             element: <AppShell />,
             children: [
               { path: 'dashboard', element: <DashboardPage /> },
+              // Floor map: managers + front desk only (admins use the console,
+              // which has no map). Edit vs. view is enforced further in the API.
+              {
+                element: <RequireRole allow={['manager', 'front_desk']} />,
+                children: [
+                  { path: 'floor-map', element: <FloorMapPage /> },
+                ],
+              },
               {
                 path: 'rooms',
                 element: <RoomsPage />,
