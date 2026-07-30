@@ -33,6 +33,26 @@ export type RoomAddPayload = Schemas['RoomAddPayload']
 
 export type WorkloadMoveResponse = Schemas['WorkloadMoveResponse']
 
+// Interactive floor map. HotelMap is the whole-hotel payload; a FloorMap entry
+// carries that floor's rooms (with their placement) + decorations.
+export type HotelMap = Schemas['HotelMapRead']
+export type FloorMap = Schemas['FloorMapRead']
+export type FloorMapWrite = Schemas['FloorMapWrite']
+export type MapRoom = Schemas['MapRoomRead']
+export type Placement = Schemas['PlacementRead']
+export type PlacementWrite = Schemas['PlacementWrite']
+export type Decoration = Schemas['DecorationRead']
+export type DecorationWrite = Schemas['DecorationWrite']
+export type DecorationKind = Decoration['kind']
+
+export const DECORATION_KINDS: DecorationKind[] = [
+  'hall',
+  'stairs',
+  'elevator',
+  'lobby',
+  'label',
+]
+
 export type Task = Schemas['TaskRead']
 export type TaskCreate = Schemas['TaskCreate']
 export type TaskUpdate = Schemas['TaskUpdate']

@@ -20,6 +20,7 @@ export const en = {
   nav: {
     dashboard: 'Dashboard',
     rooms: 'Rooms',
+    floorMap: 'Floor map',
     staff: 'Staff',
     tasks: 'Tasks',
     requests: 'Requests',
@@ -29,6 +30,19 @@ export const en = {
     housekeeping: 'Housekeeping',
     toggleMenu: 'Toggle menu',
     closeMenu: 'Close menu',
+  },
+  floorMap: {
+    title: 'Floor map',
+    subtitle: 'See room status by location and plan cleaning zones.',
+    smallScreenTitle: 'Open on a larger screen',
+    smallScreenBody:
+      'The floor map is built for tablets and computers. Open it on a screen at least 768px wide to use it.',
+    floorLabel: 'Floor {{floor}}',
+    noRooms:
+      'No rooms have a floor set yet. Add a floor to your rooms to start mapping.',
+    unplacedHeading: 'Unplaced rooms',
+    unplacedEmpty: 'Every room on this floor is placed.',
+    loadError: 'Could not load the floor map.',
   },
   enums: {
     roomStatus: {

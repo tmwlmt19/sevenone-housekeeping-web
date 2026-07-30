@@ -357,6 +357,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/tasks/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign Workload
+         * @description Call-in: move every open task from one housekeeper to a single other one.
+         */
+        post: operations["reassign_workload_api_v1_hotels__hotel_id__tasks_reassign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/redistribute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redistribute Workload
+         * @description No-show: split one housekeeper's open tasks across the covering
+         *     housekeepers — a chosen subset, or all the others when none are named.
+         */
+        post: operations["redistribute_workload_api_v1_hotels__hotel_id__tasks_redistribute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/tasks/clear-completed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear Completed Tasks
+         * @description Clear all completed tasks off the board. Soft-archive (sets archived_at),
+         *     so the rows — and their 'last cleaned by' credit — are kept but hidden.
+         */
+        post: operations["clear_completed_tasks_api_v1_hotels__hotel_id__tasks_clear_completed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}/tasks/import": {
         parameters: {
             query?: never;
@@ -425,59 +487,31 @@ export interface paths {
         patch: operations["update_task_status_api_v1_hotels__hotel_id__tasks__task_id__status_patch"];
         trace?: never;
     };
-    "/api/v1/hotels/{hotel_id}/tasks/reassign": {
+    "/api/v1/hotels/{hotel_id}/map": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Reassign Workload
-         * @description Call-in: move every open task from one housekeeper to a single other one.
+         * Get Hotel Map
+         * @description Whole-hotel map in one payload: one entry per floor that has a saved
+         *     layout or any room, each listing that floor's rooms with their placement
+         *     (null = unplaced) and its decorations. Floor switching is then instant
+         *     client-side. Rooms with no floor are excluded — they can't sit on a floor
+         *     canvas until assigned one.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    hotel_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ReassignWorkload"];
-                };
-            };
-            responses: {
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["WorkloadMoveResponse"];
-                    };
-                };
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["HTTPValidationError"];
-                    };
-                };
-            };
-        };
+        get: operations["get_hotel_map_api_v1_hotels__hotel_id__map_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/hotels/{hotel_id}/tasks/clear-completed": {
+    "/api/v1/hotels/{hotel_id}/map/{floor}": {
         parameters: {
             query?: never;
             header?: never;
@@ -485,92 +519,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
         /**
-         * Clear Completed Tasks
-         * @description Clear all completed tasks off the board (soft-archive).
+         * Put Floor Map
+         * @description Atomically save one floor: upsert its floor_maps metadata, upsert its
+         *     decorations (by id, pruning any omitted), and replace the full set of room
+         *     placements on the floor. Every placement's room must exist, belong to this
+         *     hotel, and sit on this floor; any room on the floor omitted from the body has
+         *     its placement removed. Room identity/status is untouched.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    hotel_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ClearCompletedResponse"];
-                    };
-                };
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["HTTPValidationError"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/hotels/{hotel_id}/tasks/redistribute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Redistribute Workload
-         * @description No-show: split one housekeeper's open tasks evenly across the others.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    hotel_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RedistributeWorkload"];
-                };
-            };
-            responses: {
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["WorkloadMoveResponse"];
-                    };
-                };
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["HTTPValidationError"];
-                    };
-                };
-            };
-        };
+        put: operations["put_floor_map_api_v1_hotels__hotel_id__map__floor__put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -857,6 +815,62 @@ export interface components {
             created_at: string;
         };
         /**
+         * ClearCompletedResponse
+         * @description How many completed tasks were cleared (soft-archived) off the board.
+         */
+        ClearCompletedResponse: {
+            /** Cleared */
+            cleared: number;
+        };
+        /** DecorationRead */
+        DecorationRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "hall" | "stairs" | "elevator" | "lobby" | "label";
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+            /** W */
+            w: number;
+            /** H */
+            h: number;
+            /** Label */
+            label: string | null;
+        };
+        /**
+         * DecorationWrite
+         * @description A decoration to persist. Echo an existing decoration's `id` (from a prior
+         *     GET) to update it in place and keep its identity; omit `id` for a new one.
+         *     Any decoration on the floor not present in the payload is removed.
+         */
+        DecorationWrite: {
+            /** Id */
+            id?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "hall" | "stairs" | "elevator" | "lobby" | "label";
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+            /** W */
+            w: number;
+            /** H */
+            h: number;
+            /** Label */
+            label?: string | null;
+        };
+        /**
          * DirtyRoomImportRequest
          * @description Manager/CSV path: rooms and housekeepers are already in canonical form
          *     (plain room-number strings and housekeeper user IDs).
@@ -880,6 +894,50 @@ export interface components {
             /** Assignments */
             assignments: components["schemas"]["ImportAssignment"][];
         };
+        /**
+         * FloorMapRead
+         * @description One floor's saved layout plus every room on that floor (placed or not).
+         *     width/height are null for a floor that has rooms but no saved map yet.
+         */
+        FloorMapRead: {
+            /** Floor */
+            floor: number;
+            /** Name */
+            name: string | null;
+            /** Width Ft */
+            width_ft: number | null;
+            /** Height Ft */
+            height_ft: number | null;
+            /** Grid Ft */
+            grid_ft: number;
+            /** Decorations */
+            decorations: components["schemas"]["DecorationRead"][];
+            /** Rooms */
+            rooms: components["schemas"]["MapRoomRead"][];
+        };
+        /**
+         * FloorMapWrite
+         * @description Full-floor save body: the floor's metadata, its decorations (upserted by
+         *     id, missing ones pruned), and the complete set of room placements for the
+         *     floor (any room omitted becomes unplaced).
+         */
+        FloorMapWrite: {
+            /** Name */
+            name?: string | null;
+            /** Width Ft */
+            width_ft: number;
+            /** Height Ft */
+            height_ft: number;
+            /**
+             * Grid Ft
+             * @default 1
+             */
+            grid_ft: number;
+            /** Decorations */
+            decorations?: components["schemas"]["DecorationWrite"][];
+            /** Placements */
+            placements?: components["schemas"]["PlacementWrite"][];
+        };
         /** ForgotPasswordRequest */
         ForgotPasswordRequest: {
             /**
@@ -899,6 +957,11 @@ export interface components {
             name: string;
             /** Address */
             address?: string | null;
+        };
+        /** HotelMapRead */
+        HotelMapRead: {
+            /** Floors */
+            floors: components["schemas"]["FloorMapRead"][];
         };
         /**
          * HotelProvisionRequest
@@ -987,12 +1050,67 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * MapRoomRead
+         * @description A room as it appears on the map: identity + live status + where it sits
+         *     (placement is null until the room has been placed).
+         */
+        MapRoomRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Room Number */
+            room_number: string;
+            /** Room Type */
+            room_type: string | null;
+            status: components["schemas"]["RoomStatus"];
+            placement: components["schemas"]["PlacementRead"] | null;
+        };
         /** PasswordChange */
         PasswordChange: {
             /** Current Password */
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** PlacementRead */
+        PlacementRead: {
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+            /** W */
+            w: number;
+            /** H */
+            h: number;
+            /** Rotation */
+            rotation: number;
+        };
+        /**
+         * PlacementWrite
+         * @description One room's footprint on the floor canvas, in integer feet.
+         */
+        PlacementWrite: {
+            /**
+             * Room Id
+             * Format: uuid
+             */
+            room_id: string;
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+            /** W */
+            w: number;
+            /** H */
+            h: number;
+            /**
+             * Rotation
+             * @default 0
+             */
+            rotation: number;
         };
         /**
          * PmsDirtyRoomsRequest
@@ -1017,6 +1135,41 @@ export interface components {
             theme?: ("light" | "dark" | "system") | null;
             /** Preferred Language */
             preferred_language?: ("en" | "es") | null;
+        };
+        /**
+         * ReassignWorkload
+         * @description Move ALL of one housekeeper's open tasks to a single other housekeeper
+         *     (a call-in: the first housekeeper is out, one person covers everything).
+         */
+        ReassignWorkload: {
+            /**
+             * From Housekeeper Id
+             * Format: uuid
+             */
+            from_housekeeper_id: string;
+            /**
+             * To Housekeeper Id
+             * Format: uuid
+             */
+            to_housekeeper_id: string;
+        };
+        /**
+         * RedistributeWorkload
+         * @description Split one housekeeper's open tasks across a set of covering housekeepers
+         *     (a no-show: spread the load rather than dump it on one person).
+         *
+         *     `to_housekeeper_ids` names who to spread across; omit it (or send an empty
+         *     list) to spread across *all* of the hotel's other housekeepers. Naming a
+         *     single housekeeper hands them everything — the same effect as a reassign.
+         */
+        RedistributeWorkload: {
+            /**
+             * From Housekeeper Id
+             * Format: uuid
+             */
+            from_housekeeper_id: string;
+            /** To Housekeeper Ids */
+            to_housekeeper_ids?: string[] | null;
         };
         /**
          * RequestKind
@@ -1215,53 +1368,6 @@ export interface components {
         TaskStatusUpdate: {
             status: components["schemas"]["TaskStatus"];
         };
-        /** ReassignWorkload */
-        ReassignWorkload: {
-            /**
-             * From Housekeeper Id
-             * Format: uuid
-             */
-            from_housekeeper_id: string;
-            /**
-             * To Housekeeper Id
-             * Format: uuid
-             */
-            to_housekeeper_id: string;
-        };
-        /** RedistributeWorkload */
-        RedistributeWorkload: {
-            /**
-             * From Housekeeper Id
-             * Format: uuid
-             */
-            from_housekeeper_id: string;
-            /** To Housekeeper Ids */
-            to_housekeeper_ids?: string[] | null;
-        };
-        /** WorkloadAssignment */
-        WorkloadAssignment: {
-            /**
-             * Housekeeper Id
-             * Format: uuid
-             */
-            housekeeper_id: string;
-            /** Name */
-            name: string;
-            /** Tasks Assigned */
-            tasks_assigned: number;
-        };
-        /** WorkloadMoveResponse */
-        WorkloadMoveResponse: {
-            /** Tasks Moved */
-            tasks_moved: number;
-            /** Assignments */
-            assignments: components["schemas"]["WorkloadAssignment"][];
-        };
-        /** ClearCompletedResponse */
-        ClearCompletedResponse: {
-            /** Cleared */
-            cleared: number;
-        };
         /** TaskUpdate */
         TaskUpdate: {
             /** Room Id */
@@ -1363,6 +1469,29 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WorkloadAssignment */
+        WorkloadAssignment: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** Tasks Assigned */
+            tasks_assigned: number;
+        };
+        /**
+         * WorkloadMoveResponse
+         * @description Summary of a reassign/redistribute: how many open tasks moved and how many
+         *     each receiving housekeeper ended up with.
+         */
+        WorkloadMoveResponse: {
+            /** Tasks Moved */
+            tasks_moved: number;
+            /** Assignments */
+            assignments: components["schemas"]["WorkloadAssignment"][];
         };
     };
     responses: never;
@@ -2086,6 +2215,107 @@ export interface operations {
             };
         };
     };
+    reassign_workload_api_v1_hotels__hotel_id__tasks_reassign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReassignWorkload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkloadMoveResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    redistribute_workload_api_v1_hotels__hotel_id__tasks_redistribute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedistributeWorkload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkloadMoveResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_completed_tasks_api_v1_hotels__hotel_id__tasks_clear_completed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClearCompletedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     import_dirty_rooms_endpoint_api_v1_hotels__hotel_id__tasks_import_post: {
         parameters: {
             query?: never;
@@ -2212,6 +2442,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hotel_map_api_v1_hotels__hotel_id__map_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HotelMapRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_floor_map_api_v1_hotels__hotel_id__map__floor__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+                floor: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FloorMapWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorMapRead"];
                 };
             };
             /** @description Validation Error */
