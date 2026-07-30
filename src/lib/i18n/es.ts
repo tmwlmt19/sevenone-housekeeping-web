@@ -45,6 +45,12 @@ export const es: Catalog = {
       'Ninguna habitación tiene piso asignado todavía. Asigna un piso a tus habitaciones para empezar a mapear.',
     unplacedHeading: 'Habitaciones sin ubicar',
     unplacedEmpty: 'Todas las habitaciones de este piso están ubicadas.',
+    trayHint: 'Toca una habitación y luego toca el plano para ubicarla.',
+    placeHint: 'Toca el plano para colocar la habitación.',
+    reset: 'Restablecer',
+    unplaceRoom: 'Quitar {{room}}',
+    unsaved: 'Cambios sin guardar',
+    saved: 'Plano de planta guardado',
     loadError: 'No se pudo cargar el plano de planta.',
   },
   enums: {

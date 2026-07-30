@@ -42,6 +42,12 @@ export const en = {
       'No rooms have a floor set yet. Add a floor to your rooms to start mapping.',
     unplacedHeading: 'Unplaced rooms',
     unplacedEmpty: 'Every room on this floor is placed.',
+    trayHint: 'Tap a room, then tap the map to place it.',
+    placeHint: 'Tap the map to drop the room.',
+    reset: 'Reset',
+    unplaceRoom: 'Unplace {{room}}',
+    unsaved: 'Unsaved changes',
+    saved: 'Floor map saved',
     loadError: 'Could not load the floor map.',
   },
   enums: {
