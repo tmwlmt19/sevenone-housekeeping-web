@@ -3,15 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/auth/auth-context'
-import { RoomStatusBadge } from '@/components/status-badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError } from '@/lib/api/unwrap'
-import { ROOM_STATUSES, type FloorMapWrite } from '@/lib/api/types'
+import { type FloorMapWrite } from '@/lib/api/types'
 import { useHotelMap, useSaveFloorMap } from '@/lib/queries/floor-map'
 
 import { FloorMapCanvas } from './floor-map-canvas'
 import { FloorMapEditor } from './floor-map-editor'
+import { FloorSelector, StatusLegend } from './map-chrome'
 
 export function FloorMapView() {
   const { t } = useTranslation()
@@ -55,26 +54,12 @@ export function FloorMapView() {
 
   return (
     <div className="space-y-4">
-      {/* Floor selector */}
-      <div className="flex flex-wrap items-center gap-2">
-        {data.floors.map((f) => (
-          <Button
-            key={f.floor}
-            variant={f.floor === current.floor ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFloor(f.floor)}
-          >
-            {f.name ?? t('floorMap.floorLabel', { floor: f.floor })}
-          </Button>
-        ))}
-      </div>
-
-      {/* Status legend */}
-      <div className="flex flex-wrap gap-1.5">
-        {ROOM_STATUSES.map((status) => (
-          <RoomStatusBadge key={status} status={status} />
-        ))}
-      </div>
+      <FloorSelector
+        floors={data.floors}
+        current={current.floor}
+        onSelect={setFloor}
+      />
+      <StatusLegend />
 
       {isManager ? (
         <FloorMapEditor

@@ -45,6 +45,8 @@ export const es: Catalog = {
       'Ninguna habitación tiene piso asignado todavía. Asigna un piso a tus habitaciones para empezar a mapear.',
     unplacedHeading: 'Habitaciones sin ubicar',
     unplacedEmpty: 'Todas las habitaciones de este piso están ubicadas.',
+    roomHeading: 'Habitación {{number}}',
+    tapToInspect: 'Toca una habitación para cambiar su estado.',
     trayHint: 'Toca una habitación y luego toca el plano para ubicarla.',
     placeHint: 'Toca el plano para colocar la habitación.',
     reset: 'Restablecer',
@@ -183,6 +185,8 @@ export const es: Catalog = {
     title: 'Habitaciones',
     subtitle: 'Gestiona las habitaciones de tu hotel.',
     requestRoom: 'Solicitar habitación',
+    listView: 'Lista',
+    mapView: 'Plano',
   },
   staffPage: {
     title: 'Personal',

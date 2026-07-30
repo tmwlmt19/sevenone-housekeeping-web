@@ -42,6 +42,8 @@ export const en = {
       'No rooms have a floor set yet. Add a floor to your rooms to start mapping.',
     unplacedHeading: 'Unplaced rooms',
     unplacedEmpty: 'Every room on this floor is placed.',
+    roomHeading: 'Room {{number}}',
+    tapToInspect: 'Tap a room to change its status.',
     trayHint: 'Tap a room, then tap the map to place it.',
     placeHint: 'Tap the map to drop the room.',
     reset: 'Reset',
@@ -179,6 +181,8 @@ export const en = {
     title: 'Rooms',
     subtitle: 'Manage the rooms in your hotel.',
     requestRoom: 'Request room',
+    listView: 'List',
+    mapView: 'Map',
   },
   staffPage: {
     title: 'Staff',
