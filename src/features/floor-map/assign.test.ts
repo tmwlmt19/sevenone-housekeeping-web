@@ -17,6 +17,7 @@ function room(
     room_number: number,
     room_type: null,
     status: 'dirty',
+    has_open_task: false,
     placement: placed ? { x, y, w: 10, h: 10, rotation: 0 } : null,
   }
 }

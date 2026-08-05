@@ -16,9 +16,10 @@ import { zoneColor } from './zone-colors'
 const DEFAULT_W = 120
 const DEFAULT_H = 60
 
-// A room is a cleaning candidate (and thus assignable) when it's dirty.
+// A room is a cleaning candidate (and thus assignable) when it's dirty AND
+// doesn't already carry a live task — assigning it again would double-task it.
 export function isCandidate(room: MapRoom): boolean {
-  return room.status === 'dirty'
+  return room.status === 'dirty' && !room.has_open_task
 }
 
 interface Rect {
