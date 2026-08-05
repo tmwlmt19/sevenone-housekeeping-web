@@ -47,7 +47,10 @@ export const es: Catalog = {
     unplacedHeading: 'Habitaciones sin ubicar',
     unplacedEmpty: 'Todas las habitaciones de este piso están ubicadas.',
     roomHeading: 'Habitación {{number}}',
-    tapToInspect: 'Toca una habitación para cambiar su estado.',
+    statusLabel: 'Estado',
+    assignedLabel: 'Asignada a',
+    tapToInspect:
+      'Toca una habitación para cambiar su estado y su asignación.',
     trayHint: 'Toca una habitación y luego toca el plano para ubicarla.',
     placeHint: 'Toca el plano para colocar la habitación.',
     reset: 'Restablecer',
@@ -81,15 +84,22 @@ export const es: Catalog = {
       housekeepers: 'Camaristas',
       auto: 'Asignar auto.',
       clear: 'Borrar todo',
-      pickFirst: 'Elige una camarista y luego toca o encierra sus habitaciones.',
+      expandAll: 'Expandir todo',
+      collapseAll: 'Contraer todo',
+      pickFirst:
+        'Elige una camarista para pintar sus habitaciones, o primero toca y encierra habitaciones y luego elige una camarista.',
       paintHint:
         'Toca una habitación sucia, o arrastra un recuadro sobre varias, para asignarlas.',
+      selectedCount:
+        '{{count}} habitación(es) seleccionada(s): elige una camarista para asignarlas.',
+      clearSelection: 'Borrar selección',
+      assignSelectedTo: 'Asignar las habitaciones seleccionadas a {{name}}',
       unassignedCount: '{{count}} habitación(es) sucia(s) sin asignar',
       createTasks: 'Crear {{count}} tarea(s)',
       noDirty: 'No hay habitaciones sucias sin tarea para asignar ahora.',
       unplacedHeading: 'Fuera del plano',
       unplacedHint:
-        'Estas habitaciones sucias aún no están en el plano: toca para asignarlas a la camarista seleccionada.',
+        'Estas habitaciones sucias aún no están en el plano: toca para seleccionarlas o asignarlas.',
       toggleList: 'Mostrar habitaciones asignadas',
       roomOnFloor: 'Habitación {{room}} · Piso {{floor}}',
       removeRoom: 'Quitar habitación {{room}}',
@@ -302,6 +312,10 @@ export const es: Catalog = {
     roomStatusAria: 'Estado de la habitación',
     failedUpdateStatus: 'Error al actualizar el estado',
   },
+  roomAssignee: {
+    aria: 'Persona asignada a la habitación',
+    failedUpdate: 'Error al actualizar la asignación',
+  },
   roomDetails: {
     title: 'Habitación {{number}}',
     subtitle: 'Detalles de la habitación',
@@ -358,6 +372,11 @@ export const es: Catalog = {
     notes: 'Notas',
     taskUpdated: 'Tarea actualizada',
     taskCreated: 'Tarea creada',
+    taskDeleted: 'Tarea eliminada',
+    delete: 'Eliminar',
+    deleteConfirmTitle: '¿Eliminar esta tarea?',
+    deleteConfirmBody:
+      'Esto elimina la tarea de forma permanente. No se puede deshacer.',
   },
   roomRequest: {
     title: 'Solicitar nueva habitación',

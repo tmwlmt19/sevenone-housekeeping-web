@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useMemo } from 'react'
+import { Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Field } from '@/components/form/field'
 import { RouteModal } from '@/components/route-modal'
 import { Button } from '@/components/ui/button'
@@ -28,7 +30,12 @@ import { ApiError } from '@/lib/api/unwrap'
 import { fromDateInput, toDateInput } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
-import { useCreateTask, useTasks, useUpdateTask } from '@/lib/queries/tasks'
+import {
+  useCreateTask,
+  useDeleteTask,
+  useTasks,
+  useUpdateTask,
+} from '@/lib/queries/tasks'
 
 const UNASSIGNED = 'unassigned'
 
@@ -96,7 +103,9 @@ export function TaskFormModal() {
 
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
+  const deleteTask = useDeleteTask()
   const isPending = createTask.isPending || updateTask.isPending
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -161,6 +170,22 @@ export function TaskFormModal() {
     } else {
       createTask.mutate(body as TaskCreate, handlers)
     }
+  }
+
+  function onDelete() {
+    if (!taskId) return
+    deleteTask.mutate(taskId, {
+      onSuccess: () => {
+        toast.success(t('taskForm.taskDeleted'))
+        navigate('/tasks')
+      },
+      onError: (e: unknown) => {
+        setConfirmDelete(false)
+        toast.error(
+          e instanceof ApiError ? e.message : t('common.somethingWentWrong'),
+        )
+      },
+    })
   }
 
   return (
@@ -271,19 +296,46 @@ export function TaskFormModal() {
           <Textarea id="notes" rows={3} {...form.register('notes')} />
         </Field>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/tasks')}
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? t('common.saving') : t('common.save')}
-          </Button>
+        <div className="flex items-center justify-between gap-2 pt-2">
+          {isEdit ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteTask.isPending}
+            >
+              <Trash2 className="size-4" />
+              {t('taskForm.delete')}
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/tasks')}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? t('common.saving') : t('common.save')}
+            </Button>
+          </div>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t('taskForm.deleteConfirmTitle')}
+        description={t('taskForm.deleteConfirmBody')}
+        confirmLabel={t('taskForm.delete')}
+        destructive
+        loading={deleteTask.isPending}
+        onConfirm={onDelete}
+      />
     </RouteModal>
   )
 }

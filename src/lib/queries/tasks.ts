@@ -8,7 +8,7 @@ import type {
   TaskStatus,
   TaskUpdate,
 } from '@/lib/api/types'
-import { unwrap } from '@/lib/api/unwrap'
+import { ensureOk, unwrap } from '@/lib/api/unwrap'
 
 import { qk, type TaskFilters } from './keys'
 import { useHotelId } from './use-hotel-id'
@@ -32,14 +32,16 @@ export function useTasks(filters: TaskFilters = {}) {
   })
 }
 
-/** Invalidate everything a task mutation can affect (incl. rooms — completing a
- * task flips its room to clean on the backend). */
+/** Invalidate everything a task mutation can affect: rooms (completing a task
+ * flips its room to clean on the backend) and the floor map (its `has_open_task`
+ * flag is derived from the room's live tasks). */
 function useInvalidateTaskData() {
   const hotelId = useHotelId()
   const qc = useQueryClient()
   return () => {
     qc.invalidateQueries({ queryKey: ['tasks', hotelId] })
     qc.invalidateQueries({ queryKey: qk.rooms(hotelId) })
+    qc.invalidateQueries({ queryKey: qk.map(hotelId) })
   }
 }
 
@@ -102,6 +104,21 @@ export function useUpdateTask() {
         await api.PUT('/api/v1/hotels/{hotel_id}/tasks/{task_id}', {
           params: { path: { hotel_id: hotelId, task_id: taskId } },
           body,
+        }),
+      ),
+    onSuccess: invalidate,
+  })
+}
+
+/** Permanently delete a task (edit-task modal's Delete button). */
+export function useDeleteTask() {
+  const hotelId = useHotelId()
+  const invalidate = useInvalidateTaskData()
+  return useMutation({
+    mutationFn: async (taskId: string) =>
+      ensureOk(
+        await api.DELETE('/api/v1/hotels/{hotel_id}/tasks/{task_id}', {
+          params: { path: { hotel_id: hotelId, task_id: taskId } },
         }),
       ),
     onSuccess: invalidate,

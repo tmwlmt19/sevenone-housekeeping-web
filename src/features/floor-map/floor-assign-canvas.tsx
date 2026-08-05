@@ -45,18 +45,20 @@ function roomsInRect(rooms: MapRoom[], rect: Rect): string[] {
 }
 
 /**
- * Assignment-mode canvas. Dirty rooms are cleaning candidates: tap one to toggle
- * it in/out of the active housekeeper's zone, or drag a lasso over empty floor to
- * assign every candidate inside it at once. Assigned rooms take their
- * housekeeper's zone color; unassigned candidates show a dashed "needs assigning"
- * outline; non-candidate rooms are dimmed context only. Geometry is integer feet;
- * the viewBox is in feet so it scales crisply. Interaction is gated on an active
- * housekeeper (`interactive`).
+ * Assignment-mode canvas. Dirty rooms are cleaning candidates. Assignment works
+ * both directions: pick a housekeeper first and tap/lasso to paint their zone
+ * directly, or (with no housekeeper active) tap/lasso to build a pending
+ * selection, then pick a housekeeper to assign the lot. Assigned rooms take their
+ * housekeeper's zone color; selected-but-unassigned rooms get a solid ring;
+ * unassigned candidates show a dashed "needs assigning" outline; non-candidate
+ * rooms are dimmed context only. Geometry is integer feet; the viewBox is in feet
+ * so it scales crisply. Interaction is gated by `interactive`.
  */
 export function FloorAssignCanvas({
   floor,
   zones,
   colorIndexByHk,
+  selectedRoomIds,
   interactive,
   onRoomTap,
   onLasso,
@@ -64,6 +66,7 @@ export function FloorAssignCanvas({
   floor: FloorMap
   zones: ZoneMap
   colorIndexByHk: Record<string, number>
+  selectedRoomIds: Set<string>
   interactive: boolean
   onRoomTap: (roomId: string) => void
   onLasso: (roomIds: string[]) => void
@@ -143,6 +146,7 @@ export function FloorAssignCanvas({
             candidate={candidate}
             fill={color?.fill}
             stroke={color?.stroke}
+            selected={selectedRoomIds.has(room.id)}
             interactive={interactive && candidate}
             onPointerDown={
               interactive && candidate
@@ -176,6 +180,7 @@ function AssignRoomRect({
   candidate,
   fill,
   stroke,
+  selected,
   interactive,
   onPointerDown,
 }: {
@@ -183,6 +188,7 @@ function AssignRoomRect({
   candidate: boolean
   fill?: string
   stroke?: string
+  selected: boolean
   interactive: boolean
   onPointerDown?: (e: React.PointerEvent) => void
 }) {
@@ -199,7 +205,9 @@ function AssignRoomRect({
       className={interactive ? 'cursor-pointer' : undefined}
       role={interactive ? 'button' : undefined}
       aria-label={
-        candidate ? `Room ${room.room_number} – ${assigned ? 'assigned' : 'unassigned'}` : undefined
+        candidate
+          ? `Room ${room.room_number} – ${assigned ? 'assigned' : selected ? 'selected' : 'unassigned'}`
+          : undefined
       }
     >
       <rect
@@ -216,9 +224,22 @@ function AssignRoomRect({
               : 'fill-muted/40 stroke-border',
         )}
         strokeWidth={assigned ? 0.5 : 0.3}
-        strokeDasharray={candidate && !assigned ? '1.2 1' : undefined}
+        strokeDasharray={candidate && !assigned && !selected ? '1.2 1' : undefined}
         opacity={candidate ? 1 : 0.5}
       />
+      {/* Pending-selection ring — overlays any base style so it reads whether the
+          room is still unassigned or is being moved from another housekeeper. */}
+      {selected && (
+        <rect
+          x={p.x}
+          y={p.y}
+          width={p.w}
+          height={p.h}
+          rx={0.75}
+          className="fill-none stroke-primary"
+          strokeWidth={0.8}
+        />
+      )}
       <text
         x={cx}
         y={cy}

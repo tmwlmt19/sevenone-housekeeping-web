@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import { RoomAssigneeControl } from '@/features/rooms/room-assignee-control'
 import { RoomStatusControl } from '@/features/rooms/room-status-control'
 import { useHotelMap } from '@/lib/queries/floor-map'
 import { useRooms } from '@/lib/queries/rooms'
@@ -60,11 +61,22 @@ export function FloorStatusView() {
         />
         <aside>
           {selectedRoom ? (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h3 className="text-sm font-medium">
                 {t('floorMap.roomHeading', { number: selectedRoom.room_number })}
               </h3>
-              <RoomStatusControl room={selectedRoom} />
+              <div className="space-y-1.5">
+                <span className="text-muted-foreground block text-xs font-medium">
+                  {t('floorMap.statusLabel')}
+                </span>
+                <RoomStatusControl room={selectedRoom} />
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-muted-foreground block text-xs font-medium">
+                  {t('floorMap.assignedLabel')}
+                </span>
+                <RoomAssigneeControl room={selectedRoom} />
+              </div>
             </div>
           ) : (
             <p className="text-muted-foreground text-sm">
