@@ -1074,7 +1074,10 @@ export interface components {
         /**
          * MapRoomRead
          * @description A room as it appears on the map: identity + live status + where it sits
-         *     (placement is null until the room has been placed).
+         *     (placement is null until the room has been placed). `has_open_task` flags a
+         *     room that already carries a live cleaning task — the assign view uses it to
+         *     exclude such rooms from the dirty-room candidates (same rule the import uses
+         *     to skip them), so it never double-tasks a room.
          */
         MapRoomRead: {
             /**
@@ -1087,6 +1090,11 @@ export interface components {
             /** Room Type */
             room_type: string | null;
             status: components["schemas"]["RoomStatus"];
+            /**
+             * Has Open Task
+             * @default false
+             */
+            has_open_task: boolean;
             placement: components["schemas"]["PlacementRead"] | null;
         };
         /** PasswordChange */
