@@ -455,7 +455,16 @@ export interface paths {
         /** Update Task */
         put: operations["update_task_api_v1_hotels__hotel_id__tasks__task_id__put"];
         post?: never;
-        delete?: never;
+        /**
+         * Delete Task
+         * @description Permanently delete a task. Manager/front-desk/admin only.
+         *
+         *     Used by the edit-task modal's Delete button to drop a task created in error
+         *     or no longer needed. Completed tasks are normally cleared (soft-archived via
+         *     clear-completed) to keep their "last cleaned by" credit, but a room's credit
+         *     lives on the room itself, so deleting the row outright is safe.
+         */
+        delete: operations["delete_task_api_v1_hotels__hotel_id__tasks__task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2451,6 +2460,36 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_task_api_v1_hotels__hotel_id__tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

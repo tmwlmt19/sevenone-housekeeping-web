@@ -1,4 +1,27 @@
-import type { Task, TaskPriority } from '@/lib/api/types'
+import type { Task, TaskPriority, TaskStatus } from '@/lib/api/types'
+
+// Statuses that mean a room already carries a live cleaning task — the same set
+// the backend uses for the map's `has_open_task` flag and the import's
+// duplicate guard (app/services/task_import.py ACTIVE_TASK_STATUSES). A room has
+// at most one such task at a time.
+export const ACTIVE_TASK_STATUSES: TaskStatus[] = [
+  'pending',
+  'assigned',
+  'in_progress',
+  'pending_approval',
+]
+
+/** The room's current live task, if any — the task whose assignee the map's
+ * status view reads and edits. */
+export function activeTaskForRoom(
+  tasks: Task[] | undefined,
+  roomId: string,
+): Task | undefined {
+  return tasks?.find(
+    (task) =>
+      task.room_id === roomId && ACTIVE_TASK_STATUSES.includes(task.status),
+  )
+}
 
 // Sort weight per status (lower sorts first). Uses a string map + fallback so
 // 'pending_approval' (added with the approval-flow work) already has a slot.

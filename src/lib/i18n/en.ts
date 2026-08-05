@@ -44,7 +44,9 @@ export const en = {
     unplacedHeading: 'Unplaced rooms',
     unplacedEmpty: 'Every room on this floor is placed.',
     roomHeading: 'Room {{number}}',
-    tapToInspect: 'Tap a room to change its status.',
+    statusLabel: 'Status',
+    assignedLabel: 'Assigned to',
+    tapToInspect: 'Tap a room to change its status and assignee.',
     trayHint: 'Tap a room, then tap the map to place it.',
     placeHint: 'Tap the map to drop the room.',
     reset: 'Reset',
@@ -78,14 +80,21 @@ export const en = {
       housekeepers: 'Housekeepers',
       auto: 'Auto-assign',
       clear: 'Clear all',
-      pickFirst: 'Pick a housekeeper, then tap or lasso their rooms.',
+      expandAll: 'Expand all',
+      collapseAll: 'Collapse all',
+      pickFirst:
+        'Pick a housekeeper to paint their rooms — or tap and lasso rooms first, then pick a housekeeper.',
       paintHint: 'Tap a dirty room, or drag a box over several, to assign them.',
+      selectedCount:
+        '{{count}} room(s) selected — pick a housekeeper to assign them.',
+      clearSelection: 'Clear selection',
+      assignSelectedTo: 'Assign selected rooms to {{name}}',
       unassignedCount: '{{count}} dirty room(s) unassigned',
       createTasks: 'Create {{count}} task(s)',
       noDirty: 'No untasked dirty rooms to assign right now.',
       unplacedHeading: 'Not on the map',
       unplacedHint:
-        'These dirty rooms have no place on the floor yet — tap to assign them to the selected housekeeper.',
+        'These dirty rooms have no place on the floor yet — tap to select or assign them.',
       toggleList: 'Show assigned rooms',
       roomOnFloor: 'Room {{room}} · Floor {{floor}}',
       removeRoom: 'Remove room {{room}}',
@@ -296,6 +305,10 @@ export const en = {
     roomStatusAria: 'Room status',
     failedUpdateStatus: 'Failed to update status',
   },
+  roomAssignee: {
+    aria: 'Room assignee',
+    failedUpdate: 'Failed to update assignment',
+  },
   roomDetails: {
     title: 'Room {{number}}',
     subtitle: 'Room details',
@@ -352,6 +365,11 @@ export const en = {
     notes: 'Notes',
     taskUpdated: 'Task updated',
     taskCreated: 'Task created',
+    taskDeleted: 'Task deleted',
+    delete: 'Delete',
+    deleteConfirmTitle: 'Delete this task?',
+    deleteConfirmBody:
+      'This permanently removes the task. This can’t be undone.',
   },
   roomRequest: {
     title: 'Request new room',
