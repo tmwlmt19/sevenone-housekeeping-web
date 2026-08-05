@@ -22,7 +22,6 @@ export const en = {
   nav: {
     dashboard: 'Dashboard',
     rooms: 'Rooms',
-    floorMap: 'Floor map',
     staff: 'Staff',
     tasks: 'Tasks',
     requests: 'Requests',
@@ -200,6 +199,11 @@ export const en = {
     requestRoom: 'Request room',
     listView: 'List',
     mapView: 'Map',
+    mapMode: {
+      view: 'View',
+      edit: 'Edit',
+      assign: 'Assign',
+    },
   },
   staffPage: {
     title: 'Staff',
@@ -247,13 +251,20 @@ export const en = {
     trigger: 'Import dirty rooms',
     title: 'Import dirty rooms',
     subtitle:
-      'Upload a CSV of room numbers to mark them dirty and create a cleaning task for each.',
+      'Upload a CSV of room numbers to mark them dirty, then split the cleaning across housekeepers or assign it on the map.',
     chooseFile: 'Choose CSV',
     downloadTemplate: 'Template',
     parsedSummary: '{{file}} — {{count}} room(s) found',
     parseError: 'Could not read that file. Please upload a valid CSV.',
     unknownRooms:
       '{{count}} room(s) not found in this hotel: {{rooms}}. Fix your file and re-upload.',
+    method: 'How do you want to assign these?',
+    methodAuto: 'Split across housekeepers',
+    methodAutoHint: 'Create tasks now, divided evenly across the ones you pick.',
+    methodMap: 'Assign on the map',
+    methodMapHint: 'Mark them dirty, then group and assign them on the floor map.',
+    mapExplainer:
+      '{{count}} room(s) will be marked dirty and no tasks created yet. You’ll jump to the floor map to group them and assign each group to a housekeeper.',
     assignTo: 'Assign to housekeepers',
     assignHint:
       'Selected housekeepers get an even share of the new tasks. Leave empty to import unassigned.',
@@ -261,8 +272,10 @@ export const en = {
     splitPreview: '≈ {{min}}–{{max}} tasks each across {{people}} housekeeper(s).',
     priority: 'Priority',
     createTasks: 'Create {{count}} task(s)',
+    markDirtyAndAssign: 'Mark dirty & assign on map',
     importing: 'Importing…',
     createdCount: '{{count}} task(s) created',
+    markedDirtyCount: '{{count}} room(s) marked dirty',
     skippedCount: '{{count}} skipped',
   },
   notFound: {

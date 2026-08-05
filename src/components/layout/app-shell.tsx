@@ -4,7 +4,6 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
-  Map,
   Menu,
   Settings,
   UserCircle,
@@ -26,7 +25,6 @@ import { cn } from '@/lib/utils'
 type NavLabelKey =
   | 'nav.dashboard'
   | 'nav.rooms'
-  | 'nav.floorMap'
   | 'nav.staff'
   | 'nav.tasks'
   | 'nav.requests'
@@ -53,12 +51,6 @@ const NAV_ITEMS: readonly NavItem[] = [
     labelKey: 'nav.rooms',
     icon: BedDouble,
     roles: ['admin', 'manager', 'front_desk'],
-  },
-  {
-    to: '/floor-map',
-    labelKey: 'nav.floorMap',
-    icon: Map,
-    roles: ['manager', 'front_desk'],
   },
   {
     to: '/staff',
