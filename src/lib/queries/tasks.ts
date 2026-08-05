@@ -4,6 +4,7 @@ import { api } from '@/lib/api/client'
 import type {
   DirtyRoomImportRequest,
   TaskCreate,
+  TaskPriority,
   TaskStatus,
   TaskUpdate,
 } from '@/lib/api/types'
@@ -57,17 +58,29 @@ export function useCreateTask() {
   })
 }
 
-/** Bulk-import dirty rooms: set them dirty, create a task each, and optionally
- * split the new tasks evenly across the chosen housekeepers. */
+// `create_tasks` and `priority` both default server-side; make them optional
+// here so callers can omit them. The even-split / explicit-assignment paths pass
+// a priority; the mark-dirty-only path (assign on the map later) needs neither.
+type ImportDirtyRoomsInput = Omit<
+  DirtyRoomImportRequest,
+  'create_tasks' | 'priority'
+> & {
+  create_tasks?: boolean
+  priority?: TaskPriority
+}
+
+/** Bulk-import dirty rooms: set them dirty and (unless `create_tasks` is false)
+ * create a task each — split evenly across chosen housekeepers, or by an explicit
+ * assignments map. `create_tasks: false` only marks them dirty (assign on map). */
 export function useImportDirtyRooms() {
   const hotelId = useHotelId()
   const invalidate = useInvalidateTaskData()
   return useMutation({
-    mutationFn: async (body: DirtyRoomImportRequest) =>
+    mutationFn: async (body: ImportDirtyRoomsInput) =>
       unwrap(
         await api.POST('/api/v1/hotels/{hotel_id}/tasks/import', {
           params: { path: { hotel_id: hotelId } },
-          body,
+          body: { create_tasks: true, priority: 'normal', ...body },
         }),
       ),
     onSuccess: invalidate,

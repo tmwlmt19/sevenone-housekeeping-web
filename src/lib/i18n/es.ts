@@ -24,7 +24,6 @@ export const es: Catalog = {
   nav: {
     dashboard: 'Panel',
     rooms: 'Habitaciones',
-    floorMap: 'Plano',
     staff: 'Personal',
     tasks: 'Tareas',
     requests: 'Solicitudes',
@@ -205,6 +204,11 @@ export const es: Catalog = {
     requestRoom: 'Solicitar habitación',
     listView: 'Lista',
     mapView: 'Plano',
+    mapMode: {
+      view: 'Ver',
+      edit: 'Editar',
+      assign: 'Asignar',
+    },
   },
   staffPage: {
     title: 'Personal',
@@ -252,13 +256,20 @@ export const es: Catalog = {
     trigger: 'Importar habitaciones sucias',
     title: 'Importar habitaciones sucias',
     subtitle:
-      'Sube un CSV con números de habitación para marcarlas como sucias y crear una tarea de limpieza para cada una.',
+      'Sube un CSV con números de habitación para marcarlas como sucias y luego repartir la limpieza entre el personal o asignarla en el plano.',
     chooseFile: 'Elegir CSV',
     downloadTemplate: 'Plantilla',
     parsedSummary: '{{file}} — {{count}} habitación(es) encontradas',
     parseError: 'No se pudo leer el archivo. Sube un CSV válido.',
     unknownRooms:
       '{{count}} habitación(es) no encontradas en este hotel: {{rooms}}. Corrige el archivo y vuelve a subirlo.',
+    method: '¿Cómo quieres asignarlas?',
+    methodAuto: 'Repartir entre el personal',
+    methodAutoHint: 'Crea las tareas ahora, divididas equitativamente entre quienes elijas.',
+    methodMap: 'Asignar en el plano',
+    methodMapHint: 'Márcalas como sucias y luego agrúpalas y asígnalas en el plano.',
+    mapExplainer:
+      '{{count}} habitación(es) se marcarán como sucias sin crear tareas todavía. Pasarás al plano para agruparlas y asignar cada grupo a una persona.',
     assignTo: 'Asignar a personal de limpieza',
     assignHint:
       'El personal seleccionado recibe una parte equitativa de las nuevas tareas. Déjalo vacío para importar sin asignar.',
@@ -267,8 +278,10 @@ export const es: Catalog = {
       '≈ {{min}}–{{max}} tareas cada uno entre {{people}} persona(s).',
     priority: 'Prioridad',
     createTasks: 'Crear {{count}} tarea(s)',
+    markDirtyAndAssign: 'Marcar sucias y asignar en el plano',
     importing: 'Importando…',
     createdCount: '{{count}} tarea(s) creadas',
+    markedDirtyCount: '{{count}} habitación(es) marcadas como sucias',
     skippedCount: '{{count}} omitidas',
   },
   notFound: {
