@@ -73,6 +73,21 @@ export const en = {
       lobby: 'Lobby',
       label: 'Label',
     },
+    layoutMode: 'Layout',
+    assignMode: 'Assign',
+    assign: {
+      housekeepers: 'Housekeepers',
+      auto: 'Auto-assign',
+      clear: 'Clear',
+      pickFirst: 'Pick a housekeeper, then tap or lasso their rooms.',
+      paintHint: 'Tap a dirty room, or drag a box over several, to assign them.',
+      unassignedCount: '{{count}} dirty room(s) unassigned',
+      createTasks: 'Create {{count}} task(s)',
+      noDirty: 'No dirty rooms on this floor to assign.',
+      unplacedHeading: 'Not on the map',
+      unplacedHint:
+        'These dirty rooms have no place on the floor yet — tap to assign them to the selected housekeeper.',
+    },
   },
   enums: {
     roomStatus: {

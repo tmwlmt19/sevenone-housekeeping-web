@@ -76,6 +76,22 @@ export const es: Catalog = {
       lobby: 'Vestíbulo',
       label: 'Etiqueta',
     },
+    layoutMode: 'Diseño',
+    assignMode: 'Asignar',
+    assign: {
+      housekeepers: 'Camaristas',
+      auto: 'Asignar auto.',
+      clear: 'Borrar',
+      pickFirst: 'Elige una camarista y luego toca o encierra sus habitaciones.',
+      paintHint:
+        'Toca una habitación sucia, o arrastra un recuadro sobre varias, para asignarlas.',
+      unassignedCount: '{{count}} habitación(es) sucia(s) sin asignar',
+      createTasks: 'Crear {{count}} tarea(s)',
+      noDirty: 'No hay habitaciones sucias en este piso para asignar.',
+      unplacedHeading: 'Fuera del plano',
+      unplacedHint:
+        'Estas habitaciones sucias aún no están en el plano: toca para asignarlas a la camarista seleccionada.',
+    },
   },
   enums: {
     roomStatus: {

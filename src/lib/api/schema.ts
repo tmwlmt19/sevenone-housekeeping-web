@@ -431,9 +431,10 @@ export interface paths {
         /**
          * Import Dirty Rooms Endpoint
          * @description Bulk-import a list of dirty rooms (e.g. from a manager's CSV): set each
-         *     room dirty, create a cleaning task per room, and optionally split the new
-         *     tasks evenly across the chosen housekeepers. See the shared core in
-         *     app/services/task_import.py for the full contract.
+         *     room dirty, create a cleaning task per room, and either split the new tasks
+         *     evenly across the chosen housekeepers or — when `assignments` is given (the
+         *     floor-map zone flow) — honor an explicit room → housekeeper map. See the
+         *     shared core in app/services/task_import.py for the full contract.
          */
         post: operations["import_dirty_rooms_endpoint_api_v1_hotels__hotel_id__tasks_import_post"];
         delete?: never;
@@ -874,12 +875,22 @@ export interface components {
          * DirtyRoomImportRequest
          * @description Manager/CSV path: rooms and housekeepers are already in canonical form
          *     (plain room-number strings and housekeeper user IDs).
+         *
+         *     Two assignment modes, mutually exclusive per request:
+         *     - even-split: give `rooms` + `housekeeper_ids`; the balancer spreads the new
+         *       tasks across the housekeepers.
+         *     - explicit: give `assignments` (room → housekeeper); each room's task goes to
+         *       the named housekeeper verbatim, no balancing. Powers both the map's manual
+         *       zones and its client-side auto proximity-split, which produce the same
+         *       explicit map. When present, `rooms`/`housekeeper_ids` are ignored.
          */
         DirtyRoomImportRequest: {
             /** Rooms */
             rooms?: string[];
             /** Housekeeper Ids */
             housekeeper_ids?: string[];
+            /** Assignments */
+            assignments?: components["schemas"]["RoomAssignment"][] | null;
             /** @default normal */
             priority: components["schemas"]["TaskPriority"];
         };
@@ -1207,6 +1218,21 @@ export interface components {
             room_type?: string | null;
             /** @default clean */
             status: components["schemas"]["RoomStatus"];
+        };
+        /**
+         * RoomAssignment
+         * @description One room handed to one housekeeper explicitly (the floor-map zone flow):
+         *     the caller has already decided who cleans this room, so the even-split
+         *     balancer is skipped for it.
+         */
+        RoomAssignment: {
+            /** Room Number */
+            room_number: string;
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
         };
         /** RoomCreate */
         RoomCreate: {

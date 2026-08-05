@@ -64,6 +64,8 @@ export type DirtyRoomImportRequest = Schemas['DirtyRoomImportRequest']
 export type DirtyRoomImportResponse = Schemas['DirtyRoomImportResponse']
 export type ImportAssignment = Schemas['ImportAssignment']
 export type ImportSkip = Schemas['ImportSkip']
+// One explicit room → housekeeper assignment (floor-map zone flow).
+export type RoomAssignment = Schemas['RoomAssignment']
 
 export const ROOM_STATUSES: RoomStatus[] = [
   'clean',
