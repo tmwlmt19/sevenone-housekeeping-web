@@ -497,6 +497,127 @@ export interface paths {
         patch: operations["update_task_status_api_v1_hotels__hotel_id__tasks__task_id__status_patch"];
         trace?: never;
     };
+    "/api/v1/hotels/{hotel_id}/shifts/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current Shift
+         * @description The caller's own open shift (or null). Backs the clock-in gate.
+         */
+        get: operations["current_shift_api_v1_hotels__hotel_id__shifts_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/shifts/clock-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clock In
+         * @description Open a shift for the caller (auto-closing any stale open one first).
+         */
+        post: operations["clock_in_api_v1_hotels__hotel_id__shifts_clock_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/shifts/clock-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clock Out
+         * @description Close the caller's open shift. Idempotent — returns null if none open.
+         */
+        post: operations["clock_out_api_v1_hotels__hotel_id__shifts_clock_out_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/stats/clean-times": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clean Times
+         * @description Average clean time by room type — hotel-wide and per housekeeper.
+         */
+        get: operations["clean_times_api_v1_hotels__hotel_id__stats_clean_times_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/stats/efficiency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Efficiency
+         * @description Per housekeeper: share of worked shifts where they finished every task.
+         */
+        get: operations["efficiency_api_v1_hotels__hotel_id__stats_efficiency_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{hotel_id}/stats/task-load": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Task Load
+         * @description Per housekeeper: tasks assigned/completed and utilization; plus the
+         *     hotel-wide utilization (are more or fewer housekeepers needed?).
+         */
+        get: operations["task_load_api_v1_hotels__hotel_id__stats_task_load_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/hotels/{hotel_id}/map": {
         parameters: {
             query?: never;
@@ -824,6 +945,23 @@ export interface components {
              */
             created_at: string;
         };
+        /** CleanTimesResponse */
+        CleanTimesResponse: {
+            /**
+             * From Date
+             * Format: date
+             */
+            from_date: string;
+            /**
+             * To Date
+             * Format: date
+             */
+            to_date: string;
+            /** Hotel By Room Type */
+            hotel_by_room_type: components["schemas"]["RoomTypeAvg"][];
+            /** By Housekeeper */
+            by_housekeeper: components["schemas"]["HousekeeperRoomTypeAvg"][];
+        };
         /**
          * ClearCompletedResponse
          * @description How many completed tasks were cleared (soft-archived) off the board.
@@ -831,6 +969,14 @@ export interface components {
         ClearCompletedResponse: {
             /** Cleared */
             cleared: number;
+        };
+        /**
+         * CurrentShiftResponse
+         * @description The housekeeper's currently open shift, or null when they're off shift —
+         *     the web app's clock-in gate reads this to decide whether to unlock work.
+         */
+        CurrentShiftResponse: {
+            shift: components["schemas"]["ShiftRead"] | null;
         };
         /** DecorationRead */
         DecorationRead: {
@@ -931,6 +1077,21 @@ export interface components {
             edge: number;
             /** T */
             t: number;
+        };
+        /** EfficiencyResponse */
+        EfficiencyResponse: {
+            /**
+             * From Date
+             * Format: date
+             */
+            from_date: string;
+            /**
+             * To Date
+             * Format: date
+             */
+            to_date: string;
+            /** By Housekeeper */
+            by_housekeeper: components["schemas"]["HousekeeperEfficiency"][];
         };
         /**
          * FloorMapRead
@@ -1067,6 +1228,54 @@ export interface components {
             address?: string | null;
             /** Auto Approve Tasks */
             auto_approve_tasks?: boolean | null;
+        };
+        /** HousekeeperEfficiency */
+        HousekeeperEfficiency: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** Shifts Worked */
+            shifts_worked: number;
+            /** Shifts All Done */
+            shifts_all_done: number;
+            /** Efficiency Pct */
+            efficiency_pct: number | null;
+        };
+        /** HousekeeperLoad */
+        HousekeeperLoad: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** Tasks Assigned */
+            tasks_assigned: number;
+            /** Tasks Completed */
+            tasks_completed: number;
+            /** Clean Seconds Total */
+            clean_seconds_total: number;
+            /** Shift Seconds Total */
+            shift_seconds_total: number;
+            /** Utilization Pct */
+            utilization_pct: number | null;
+        };
+        /** HousekeeperRoomTypeAvg */
+        HousekeeperRoomTypeAvg: {
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /** Name */
+            name: string;
+            /** By Room Type */
+            by_room_type: components["schemas"]["RoomTypeAvg"][];
         };
         /** ImportAssignment */
         ImportAssignment: {
@@ -1327,6 +1536,18 @@ export interface components {
         RoomStatusUpdate: {
             status: components["schemas"]["RoomStatus"];
         };
+        /**
+         * RoomTypeAvg
+         * @description Average clean time for one room type over the window.
+         */
+        RoomTypeAvg: {
+            /** Room Type */
+            room_type: string;
+            /** Clean Count */
+            clean_count: number;
+            /** Avg Seconds */
+            avg_seconds: number | null;
+        };
         /** RoomUpdate */
         RoomUpdate: {
             /** Room Number */
@@ -1336,6 +1557,54 @@ export interface components {
             /** Room Type */
             room_type?: string | null;
             status?: components["schemas"]["RoomStatus"] | null;
+        };
+        /**
+         * ShiftCloseReason
+         * @description Why a housekeeper's shift was closed.
+         * @enum {string}
+         */
+        ShiftCloseReason: "logout" | "stale_reclock" | "daily_cap" | "manual";
+        /** ShiftRead */
+        ShiftRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Hotel Id
+             * Format: uuid
+             */
+            hotel_id: string;
+            /**
+             * Housekeeper Id
+             * Format: uuid
+             */
+            housekeeper_id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Ended At */
+            ended_at: string | null;
+            close_reason: components["schemas"]["ShiftCloseReason"] | null;
+            /** Assigned Count */
+            assigned_count: number | null;
+            /** Completed Count */
+            completed_count: number | null;
+            /** All Assigned Done */
+            all_assigned_done: boolean | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /**
          * StaffAddPayload
@@ -1379,6 +1648,27 @@ export interface components {
             /** Due Date */
             due_date?: string | null;
         };
+        /** TaskLoadResponse */
+        TaskLoadResponse: {
+            /**
+             * From Date
+             * Format: date
+             */
+            from_date: string;
+            /**
+             * To Date
+             * Format: date
+             */
+            to_date: string;
+            /** By Housekeeper */
+            by_housekeeper: components["schemas"]["HousekeeperLoad"][];
+            /** Hotel Clean Seconds Total */
+            hotel_clean_seconds_total: number;
+            /** Hotel Shift Seconds Total */
+            hotel_shift_seconds_total: number;
+            /** Hotel Utilization Pct */
+            hotel_utilization_pct: number | null;
+        };
         /**
          * TaskPriority
          * @enum {string}
@@ -1409,6 +1699,8 @@ export interface components {
             notes: string | null;
             /** Due Date */
             due_date: string | null;
+            /** Started At */
+            started_at: string | null;
             /** Completed At */
             completed_at: string | null;
             /**
@@ -2535,6 +2827,201 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    current_shift_api_v1_hotels__hotel_id__shifts_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentShiftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clock_in_api_v1_hotels__hotel_id__shifts_clock_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clock_out_api_v1_hotels__hotel_id__shifts_clock_out_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentShiftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clean_times_api_v1_hotels__hotel_id__stats_clean_times_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CleanTimesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    efficiency_api_v1_hotels__hotel_id__stats_efficiency_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EfficiencyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    task_load_api_v1_hotels__hotel_id__stats_task_load_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskLoadResponse"];
                 };
             };
             /** @description Validation Error */
