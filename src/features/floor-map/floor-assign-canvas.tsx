@@ -7,9 +7,10 @@ import type { ZoneMap } from './assign'
 import {
   DecorationShape,
   FloorBackdrop,
-  HallBorders,
   paddedViewBox,
+  polygonPoints,
 } from './canvas-parts'
+import { boundingBox, centroid } from './geometry'
 import { pointerToSvg } from './svg-coords'
 import { zoneColor } from './zone-colors'
 
@@ -29,14 +30,12 @@ interface Rect {
   h: number
 }
 
-/** Rooms whose center falls inside the (feet) rectangle. */
+/** Rooms whose centroid falls inside the (feet) rectangle. */
 function roomsInRect(rooms: MapRoom[], rect: Rect): string[] {
   const ids: string[] = []
   for (const room of rooms) {
-    const p = room.placement
-    if (!p) continue
-    const cx = p.x + p.w / 2
-    const cy = p.y + p.h / 2
+    if (!room.placement) continue
+    const [cx, cy] = centroid(room.placement.vertices)
     if (cx >= rect.x && cx <= rect.x + rect.w && cy >= rect.y && cy <= rect.y + rect.h) {
       ids.push(room.id)
     }
@@ -126,12 +125,11 @@ export function FloorAssignCanvas({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
-      <FloorBackdrop width={width} height={height} />
+      <FloorBackdrop width={width} height={height} outline={floor.outline} />
 
       {floor.decorations.map((deco) => (
         <DecorationShape key={deco.id} deco={deco} />
       ))}
-      <HallBorders decorations={floor.decorations} />
 
       {floor.rooms.map((room) => {
         if (!room.placement) return null
@@ -193,14 +191,14 @@ function AssignRoomRect({
   onPointerDown?: (e: React.PointerEvent) => void
 }) {
   const p = room.placement!
-  const cx = p.x + p.w / 2
-  const cy = p.y + p.h / 2
-  const fontSize = Math.max(2, Math.min(p.w, p.h) * 0.28)
+  const [cx, cy] = centroid(p.vertices)
+  const bb = boundingBox(p.vertices)
+  const points = polygonPoints(p.vertices)
+  const fontSize = Math.max(2, Math.min(bb.w, bb.h) * 0.28)
   const assigned = !!fill
 
   return (
     <g
-      transform={p.rotation ? `rotate(${p.rotation} ${cx} ${cy})` : undefined}
       onPointerDown={onPointerDown}
       className={interactive ? 'cursor-pointer' : undefined}
       role={interactive ? 'button' : undefined}
@@ -210,12 +208,8 @@ function AssignRoomRect({
           : undefined
       }
     >
-      <rect
-        x={p.x}
-        y={p.y}
-        width={p.w}
-        height={p.h}
-        rx={0.75}
+      <polygon
+        points={points}
         className={cn(
           assigned
             ? cn(fill, stroke)
@@ -230,12 +224,8 @@ function AssignRoomRect({
       {/* Pending-selection ring — overlays any base style so it reads whether the
           room is still unassigned or is being moved from another housekeeper. */}
       {selected && (
-        <rect
-          x={p.x}
-          y={p.y}
-          width={p.w}
-          height={p.h}
-          rx={0.75}
+        <polygon
+          points={points}
           className="fill-none stroke-primary"
           strokeWidth={0.8}
         />

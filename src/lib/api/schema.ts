@@ -844,14 +844,11 @@ export interface components {
              * @enum {string}
              */
             kind: "hall" | "stairs" | "elevator" | "lobby" | "label";
-            /** X */
-            x: number;
-            /** Y */
-            y: number;
-            /** W */
-            w: number;
-            /** H */
-            h: number;
+            /** Vertices */
+            vertices: [
+                number,
+                number
+            ][];
             /** Label */
             label: string | null;
         };
@@ -859,7 +856,8 @@ export interface components {
          * DecorationWrite
          * @description A decoration to persist. Echo an existing decoration's `id` (from a prior
          *     GET) to update it in place and keep its identity; omit `id` for a new one.
-         *     Any decoration on the floor not present in the payload is removed.
+         *     Any decoration on the floor not present in the payload is removed. A `label`
+         *     carries a single anchor point; every other kind carries a filled polygon.
          */
         DecorationWrite: {
             /** Id */
@@ -869,14 +867,11 @@ export interface components {
              * @enum {string}
              */
             kind: "hall" | "stairs" | "elevator" | "lobby" | "label";
-            /** X */
-            x: number;
-            /** Y */
-            y: number;
-            /** W */
-            w: number;
-            /** H */
-            h: number;
+            /** Vertices */
+            vertices: [
+                number,
+                number
+            ][];
             /** Label */
             label?: string | null;
         };
@@ -925,9 +920,23 @@ export interface components {
             assignments: components["schemas"]["ImportAssignment"][];
         };
         /**
+         * DoorRef
+         * @description A room's door: which edge it sits on (index into the room's vertices) and
+         *     where along that edge (`t`, 0..1). Edge-relative so the door stays glued to the
+         *     wall as the room is moved, rotated, or resized. It's rendered as a short line
+         *     on that wall and is only valid where the wall borders another object.
+         */
+        DoorRef: {
+            /** Edge */
+            edge: number;
+            /** T */
+            t: number;
+        };
+        /**
          * FloorMapRead
          * @description One floor's saved layout plus every room on that floor (placed or not).
-         *     width/height are null for a floor that has rooms but no saved map yet.
+         *     width/height are null for a floor that has rooms but no saved map yet; outline
+         *     is null for a plain rectangular floor.
          */
         FloorMapRead: {
             /** Floor */
@@ -940,6 +949,11 @@ export interface components {
             height_ft: number | null;
             /** Grid Ft */
             grid_ft: number;
+            /** Outline */
+            outline: [
+                number,
+                number
+            ][] | null;
             /** Decorations */
             decorations: components["schemas"]["DecorationRead"][];
             /** Rooms */
@@ -947,9 +961,10 @@ export interface components {
         };
         /**
          * FloorMapWrite
-         * @description Full-floor save body: the floor's metadata, its decorations (upserted by
-         *     id, missing ones pruned), and the complete set of room placements for the
-         *     floor (any room omitted becomes unplaced).
+         * @description Full-floor save body: the floor's metadata, its outline polygon (null = a
+         *     plain rectangle), its decorations (upserted by id, missing ones pruned), and
+         *     the complete set of room placements for the floor (any room omitted becomes
+         *     unplaced).
          */
         FloorMapWrite: {
             /** Name */
@@ -963,6 +978,11 @@ export interface components {
              * @default 1
              */
             grid_ft: number;
+            /** Outline */
+            outline?: [
+                number,
+                number
+            ][] | null;
             /** Decorations */
             decorations?: components["schemas"]["DecorationWrite"][];
             /** Placements */
@@ -1115,20 +1135,17 @@ export interface components {
         };
         /** PlacementRead */
         PlacementRead: {
-            /** X */
-            x: number;
-            /** Y */
-            y: number;
-            /** W */
-            w: number;
-            /** H */
-            h: number;
-            /** Rotation */
-            rotation: number;
+            /** Vertices */
+            vertices: [
+                number,
+                number
+            ][];
+            door?: components["schemas"]["DoorRef"] | null;
         };
         /**
          * PlacementWrite
-         * @description One room's footprint on the floor canvas, in integer feet.
+         * @description One room's footprint on the floor canvas as an absolute polygon (float
+         *     feet), plus an optional edge-relative door for later path routing.
          */
         PlacementWrite: {
             /**
@@ -1136,19 +1153,12 @@ export interface components {
              * Format: uuid
              */
             room_id: string;
-            /** X */
-            x: number;
-            /** Y */
-            y: number;
-            /** W */
-            w: number;
-            /** H */
-            h: number;
-            /**
-             * Rotation
-             * @default 0
-             */
-            rotation: number;
+            /** Vertices */
+            vertices: [
+                number,
+                number
+            ][];
+            door?: components["schemas"]["DoorRef"] | null;
         };
         /**
          * PmsDirtyRoomsRequest

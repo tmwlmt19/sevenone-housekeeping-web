@@ -3,6 +3,7 @@ import {
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
+  Split,
   Sparkles,
   Users,
   X,
@@ -30,6 +31,7 @@ import { useImportDirtyRooms } from '@/lib/queries/tasks'
 import { cn } from '@/lib/utils'
 
 import { autoClusterRooms, zonesToAssignments, type ZoneMap } from './assign'
+import { AutoAssignModal } from './auto-assign-modal'
 import { FloorAssignCanvas, isCandidate } from './floor-assign-canvas'
 import { FloorSelector } from './map-chrome'
 import { zoneColor } from './zone-colors'
@@ -63,6 +65,7 @@ export function FloorAssignView() {
   const [priority, setPriority] = useState<TaskPriority>('normal')
   // Which housekeepers have their assigned-room list expanded in the palette.
   const [expandedHks, setExpandedHks] = useState<Set<string>>(new Set())
+  const [autoOpen, setAutoOpen] = useState(false)
 
   useEffect(() => {
     if (!map || floor !== undefined) return
@@ -203,9 +206,6 @@ export function FloorAssignView() {
   }
 
   const current = map.floors.find((f) => f.floor === floor) ?? map.floors[0]
-  const currentPlacedCandidates = current.rooms.filter(
-    (r) => isCandidate(r) && r.placement,
-  )
   const currentUnplaced = current.rooms.filter(
     (r) => isCandidate(r) && !r.placement,
   )
@@ -221,15 +221,22 @@ export function FloorAssignView() {
     )
   }
 
-  function autoAssign() {
-    if (housekeepers.length === 0) return
-    // Cluster this floor's placed candidates and merge into the running plan,
-    // leaving other floors' assignments untouched.
-    const clustered = autoClusterRooms(
-      currentPlacedCandidates,
-      housekeepers.map((h) => h.id),
+  // Optimized auto-assign runs across the whole plan (all floors) and merges its
+  // zones into the running plan, like manual painting.
+  function applyAuto(auto: ZoneMap) {
+    setZones((prev) => ({ ...prev, ...auto }))
+  }
+
+  // Quick split: the simple even-band proximity split, per current floor. A
+  // one-click alternative to the optimized modal when the manager just wants the
+  // day's dirty rooms handed out in contiguous bands.
+  function quickSplit() {
+    applyAuto(
+      autoClusterRooms(
+        current.rooms.filter(isCandidate),
+        housekeepers.map((h) => h.id),
+      ),
     )
-    setZones((prev) => ({ ...prev, ...clustered }))
   }
 
   function submit() {
@@ -362,10 +369,26 @@ export function FloorAssignView() {
                 <Users className="size-4" />
                 {t('floorMap.assign.housekeepers')}
               </Label>
-              <Button type="button" variant="ghost" size="sm" onClick={autoAssign}>
-                <Sparkles className="size-4" />
-                {t('floorMap.assign.auto')}
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={quickSplit}
+                >
+                  <Split className="size-4" />
+                  {t('floorMap.assign.quickSplit')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAutoOpen(true)}
+                >
+                  <Sparkles className="size-4" />
+                  {t('floorMap.assign.optimized')}
+                </Button>
+              </div>
             </div>
 
             {hksWithRooms.length > 0 && (
@@ -528,6 +551,14 @@ export function FloorAssignView() {
           </Button>
         </aside>
       </div>
+
+      <AutoAssignModal
+        open={autoOpen}
+        onOpenChange={setAutoOpen}
+        floors={map.floors}
+        housekeepers={housekeepers}
+        onApply={applyAuto}
+      />
     </div>
   )
 }

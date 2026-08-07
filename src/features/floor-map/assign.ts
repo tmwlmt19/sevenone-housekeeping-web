@@ -1,5 +1,7 @@
 import type { MapRoom, RoomAssignment } from '@/lib/api/types'
 
+import { centroid } from './geometry'
+
 /**
  * Shared core for map-driven task assignment. Both entry points — manually
  * lassoing rooms into zones and the one-click auto proximity-split — produce the
@@ -41,8 +43,8 @@ function chunkSizes(count: number, n: number): number[] {
 }
 
 function center(room: MapRoom): { cx: number; cy: number } {
-  const p = room.placement!
-  return { cx: p.x + p.w / 2, cy: p.y + p.h / 2 }
+  const [cx, cy] = centroid(room.placement!.vertices)
+  return { cx, cy }
 }
 
 /**

@@ -45,6 +45,13 @@ export type Decoration = Schemas['DecorationRead']
 export type DecorationWrite = Schemas['DecorationWrite']
 export type DecorationKind = Decoration['kind']
 
+// Floor-map geometry: an [x, y] point in feet, and an ordered list of them that
+// forms a shape's outline (a rectangle is just four right-angle vertices).
+export type Vertex = [number, number]
+export type Polygon = Vertex[]
+// A room's door: which wall (edge index) and where along it (t, 0..1).
+export type DoorRef = Schemas['DoorRef']
+
 export const DECORATION_KINDS: DecorationKind[] = [
   'hall',
   'stairs',
@@ -52,6 +59,22 @@ export const DECORATION_KINDS: DecorationKind[] = [
   'lobby',
   'label',
 ]
+
+// Vertical-circulation nodes. These stay first-class, independent shapes on the
+// map: they never merge into a hall/lobby, so route-mapping can always pinpoint
+// where they join the walkable space, and the front desk can spot them by icon.
+export const CIRCULATION_KINDS: DecorationKind[] = ['stairs', 'elevator']
+
+export function isCirculationKind(kind: DecorationKind): boolean {
+  return kind === 'stairs' || kind === 'elevator'
+}
+
+/** Only the open "space" shapes (halls, lobbies) can be unioned together. Labels
+ *  carry no footprint, and circulation nodes (stairs/elevators) are kept separate
+ *  on purpose — merging them away would lose where they are for route-mapping. */
+export function isMergeableKind(kind: DecorationKind): boolean {
+  return kind === 'hall' || kind === 'lobby'
+}
 
 export type Task = Schemas['TaskRead']
 export type TaskCreate = Schemas['TaskCreate']
