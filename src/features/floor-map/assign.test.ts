@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import type { MapRoom } from '@/lib/api/types'
 
 import { autoClusterRooms, zonesToAssignments } from './assign'
+import { rectVertices } from './geometry'
 
-/** Minimal placed room; x/y position it, w/h default to a small footprint. */
+/** Minimal placed room; x/y position a small 10×10 footprint. */
 function room(
   id: string,
   number: string,
@@ -18,7 +19,7 @@ function room(
     room_type: null,
     status: 'dirty',
     has_open_task: false,
-    placement: placed ? { x, y, w: 10, h: 10, rotation: 0 } : null,
+    placement: placed ? { vertices: rectVertices(x, y, 10, 10), door: null } : null,
   }
 }
 

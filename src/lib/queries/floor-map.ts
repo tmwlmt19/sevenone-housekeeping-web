@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/lib/api/client'
-import type { FloorMapWrite } from '@/lib/api/types'
+import type { FloorMapWrite, HotelMap } from '@/lib/api/types'
 import { unwrap } from '@/lib/api/unwrap'
 
 import { qk } from './keys'
@@ -14,12 +14,15 @@ export function useHotelMap() {
   const hotelId = useHotelId()
   return useQuery({
     queryKey: qk.map(hotelId),
-    queryFn: async () =>
+    // openapi-fetch widens the geometry tuple types ([x, y]) to number[] as they
+    // pass through its response machinery; re-narrow to the schema type so the
+    // Vertex/Polygon tuples flow cleanly into the map components.
+    queryFn: async (): Promise<HotelMap> =>
       unwrap(
         await api.GET('/api/v1/hotels/{hotel_id}/map', {
           params: { path: { hotel_id: hotelId } },
         }),
-      ),
+      ) as HotelMap,
   })
 }
 

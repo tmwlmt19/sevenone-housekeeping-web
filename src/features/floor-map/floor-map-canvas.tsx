@@ -3,9 +3,8 @@ import type { FloorMap } from '@/lib/api/types'
 import {
   DecorationShape,
   FloorBackdrop,
-  HallBorders,
   paddedViewBox,
-  RoomRect,
+  RoomShape,
 } from './canvas-parts'
 
 // Fallback canvas extent (feet) for a floor that has rooms but no saved map yet,
@@ -14,10 +13,11 @@ const DEFAULT_W = 120
 const DEFAULT_H = 60
 
 /**
- * Render of one floor: the floor panel, a light grid, decorations, and every
- * placed room colored by status. Read-only by default; pass `onRoomClick` to make
- * rooms tappable (used by the status view for tap-to-change-status). Geometry is
- * integer feet; the viewBox is in feet (with an edge buffer) so it scales crisply.
+ * Render of one floor: the floor panel (its outline polygon, or a plain
+ * rectangle), a light grid, decorations, and every placed room colored by status.
+ * Read-only by default; pass `onRoomClick` to make rooms tappable (used by the
+ * status view for tap-to-change-status). Geometry is absolute polygons in feet;
+ * the viewBox is in feet (with an edge buffer) so it scales crisply.
  */
 export function FloorMapCanvas({
   floor,
@@ -40,22 +40,17 @@ export function FloorMapCanvas({
       role="img"
       aria-label="Floor map"
     >
-      <FloorBackdrop width={width} height={height} />
+      <FloorBackdrop width={width} height={height} outline={floor.outline} />
 
       {floor.decorations.map((deco) => (
         <DecorationShape key={deco.id} deco={deco} />
       ))}
-      <HallBorders decorations={floor.decorations} />
 
       {floor.rooms.map((room) =>
         room.placement ? (
-          <RoomRect
+          <RoomShape
             key={room.id}
-            x={room.placement.x}
-            y={room.placement.y}
-            w={room.placement.w}
-            h={room.placement.h}
-            rotation={room.placement.rotation}
+            vertices={room.placement.vertices}
             status={room.status}
             roomNumber={room.room_number}
             selected={selectedRoomId === room.id}
