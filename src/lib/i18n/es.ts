@@ -315,10 +315,15 @@ export const es: Catalog = {
     unknownRooms:
       '{{count}} habitación(es) no encontradas en este hotel: {{rooms}}. Corrige el archivo y vuelve a subirlo.',
     method: '¿Cómo quieres asignarlas?',
-    methodAuto: 'Repartir entre el personal',
+    methodOptimized: 'Asignación automática optimizada',
+    methodOptimizedHint:
+      'Agrupa las habitaciones en zonas cercanas y las reparte según el tiempo de limpieza y la duración del turno.',
+    methodAuto: 'Reparto simple',
     methodAutoHint: 'Crea las tareas ahora, divididas equitativamente entre quienes elijas.',
     methodMap: 'Asignar en el plano',
     methodMapHint: 'Márcalas como sucias y luego agrúpalas y asígnalas en el plano.',
+    optimizedExplainer:
+      '{{count}} habitación(es) se marcarán como sucias sin crear tareas todavía. Pasarás al plano, donde la asignación automática optimizada se abre sola: indica quién trabaja hoy y la duración de sus turnos, revisa el reparto y luego crea las tareas.',
     mapExplainer:
       '{{count}} habitación(es) se marcarán como sucias sin crear tareas todavía. Pasarás al plano para agruparlas y asignar cada grupo a una persona.',
     assignTo: 'Asignar a personal de limpieza',
@@ -329,6 +334,7 @@ export const es: Catalog = {
       '≈ {{min}}–{{max}} tareas cada uno entre {{people}} persona(s).',
     priority: 'Prioridad',
     createTasks: 'Crear {{count}} tarea(s)',
+    markDirtyAndOptimize: 'Marcar sucias y asignar automáticamente',
     markDirtyAndAssign: 'Marcar sucias y asignar en el plano',
     importing: 'Importando…',
     createdCount: '{{count}} tarea(s) creadas',

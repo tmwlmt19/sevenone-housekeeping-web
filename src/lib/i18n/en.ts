@@ -309,10 +309,15 @@ export const en = {
     unknownRooms:
       '{{count}} room(s) not found in this hotel: {{rooms}}. Fix your file and re-upload.',
     method: 'How do you want to assign these?',
-    methodAuto: 'Split across housekeepers',
+    methodOptimized: 'Optimized auto-assign',
+    methodOptimizedHint:
+      'Group rooms into walkable clusters and split by cleaning time and shift length.',
+    methodAuto: 'Simple split',
     methodAutoHint: 'Create tasks now, divided evenly across the ones you pick.',
     methodMap: 'Assign on the map',
     methodMapHint: 'Mark them dirty, then group and assign them on the floor map.',
+    optimizedExplainer:
+      '{{count}} room(s) will be marked dirty and no tasks created yet. You’ll jump to the floor map, where the optimized auto-assign opens automatically — set who’s working today and their shift lengths, preview the split, then create the tasks.',
     mapExplainer:
       '{{count}} room(s) will be marked dirty and no tasks created yet. You’ll jump to the floor map to group them and assign each group to a housekeeper.',
     assignTo: 'Assign to housekeepers',
@@ -322,6 +327,7 @@ export const en = {
     splitPreview: '≈ {{min}}–{{max}} tasks each across {{people}} housekeeper(s).',
     priority: 'Priority',
     createTasks: 'Create {{count}} task(s)',
+    markDirtyAndOptimize: 'Mark dirty & auto-assign',
     markDirtyAndAssign: 'Mark dirty & assign on map',
     importing: 'Importing…',
     createdCount: '{{count}} task(s) created',
