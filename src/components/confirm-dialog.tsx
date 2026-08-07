@@ -10,7 +10,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { cn } from '@/lib/utils'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -46,15 +45,12 @@ export function ConfirmDialog({
             {t('common.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction
+            variant={destructive ? 'destructive' : 'default'}
             disabled={loading}
             onClick={(e) => {
               e.preventDefault()
               onConfirm()
             }}
-            className={cn(
-              destructive &&
-                'bg-destructive hover:bg-destructive/90 text-white',
-            )}
           >
             {loading
               ? t('common.working')

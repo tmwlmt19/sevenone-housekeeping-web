@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useMemo } from 'react'
+import { Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Field } from '@/components/form/field'
 import { RouteModal } from '@/components/route-modal'
 import { Button } from '@/components/ui/button'
@@ -28,14 +30,19 @@ import { ApiError } from '@/lib/api/unwrap'
 import { fromDateInput, toDateInput } from '@/lib/format'
 import { useRooms } from '@/lib/queries/rooms'
 import { useStaff } from '@/lib/queries/staff'
-import { useCreateTask, useTasks, useUpdateTask } from '@/lib/queries/tasks'
+import {
+  useCreateTask,
+  useDeleteTask,
+  useTasks,
+  useUpdateTask,
+} from '@/lib/queries/tasks'
 
 const UNASSIGNED = 'unassigned'
 
 type FormValues = {
   room_id: string
   assigned_to: string
-  status: 'pending' | 'assigned' | 'in_progress' | 'completed'
+  status: 'pending' | 'assigned' | 'in_progress' | 'pending_approval' | 'completed'
   priority: 'low' | 'normal' | 'urgent'
   notes: string
   due_date: string
@@ -44,10 +51,20 @@ type FormValues = {
 const EMPTY: FormValues = {
   room_id: '',
   assigned_to: UNASSIGNED,
-  status: 'pending',
+  // New tasks default to "assigned" (managers usually assign on creation); if the
+  // task is left unassigned, onSubmit downgrades it to "pending" (you can't be
+  // assigned to nobody).
+  status: 'assigned',
   priority: 'normal',
   notes: '',
   due_date: '',
+}
+
+/** Today as a YYYY-MM-DD value for <input type="date">. */
+function todayInput(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export function TaskFormModal() {
@@ -62,7 +79,13 @@ export function TaskFormModal() {
       z.object({
         room_id: z.string().min(1, t('taskForm.selectRoom')),
         assigned_to: z.string(),
-        status: z.enum(['pending', 'assigned', 'in_progress', 'completed']),
+        status: z.enum([
+          'pending',
+          'assigned',
+          'in_progress',
+          'pending_approval',
+          'completed',
+        ]),
         priority: z.enum(['low', 'normal', 'urgent']),
         notes: z.string(),
         due_date: z.string(),
@@ -80,11 +103,14 @@ export function TaskFormModal() {
 
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
+  const deleteTask = useDeleteTask()
   const isPending = createTask.isPending || updateTask.isPending
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { ...EMPTY, room_id: presetRoomId },
+    // New tasks prefill today's due date; editing overrides this from the task.
+    defaultValues: { ...EMPTY, room_id: presetRoomId, due_date: todayInput() },
   })
 
   useEffect(() => {
@@ -111,11 +137,18 @@ export function TaskFormModal() {
   }
 
   function onSubmit(values: FormValues) {
+    const assignedTo =
+      values.assigned_to === UNASSIGNED ? null : values.assigned_to
+    // A task can't be "assigned" to nobody — fall back to pending when the
+    // default "assigned" status is left on an unassigned task.
+    const status =
+      assignedTo === null && values.status === 'assigned'
+        ? 'pending'
+        : values.status
     const body: TaskCreate | TaskUpdate = {
       room_id: values.room_id,
-      assigned_to:
-        values.assigned_to === UNASSIGNED ? null : values.assigned_to,
-      status: values.status,
+      assigned_to: assignedTo,
+      status,
       priority: values.priority,
       notes: values.notes.trim() === '' ? null : values.notes,
       due_date: fromDateInput(values.due_date),
@@ -137,6 +170,22 @@ export function TaskFormModal() {
     } else {
       createTask.mutate(body as TaskCreate, handlers)
     }
+  }
+
+  function onDelete() {
+    if (!taskId) return
+    deleteTask.mutate(taskId, {
+      onSuccess: () => {
+        toast.success(t('taskForm.taskDeleted'))
+        navigate('/tasks')
+      },
+      onError: (e: unknown) => {
+        setConfirmDelete(false)
+        toast.error(
+          e instanceof ApiError ? e.message : t('common.somethingWentWrong'),
+        )
+      },
+    })
   }
 
   return (
@@ -247,19 +296,46 @@ export function TaskFormModal() {
           <Textarea id="notes" rows={3} {...form.register('notes')} />
         </Field>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/tasks')}
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? t('common.saving') : t('common.save')}
-          </Button>
+        <div className="flex items-center justify-between gap-2 pt-2">
+          {isEdit ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteTask.isPending}
+            >
+              <Trash2 className="size-4" />
+              {t('taskForm.delete')}
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/tasks')}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? t('common.saving') : t('common.save')}
+            </Button>
+          </div>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t('taskForm.deleteConfirmTitle')}
+        description={t('taskForm.deleteConfirmBody')}
+        confirmLabel={t('taskForm.delete')}
+        destructive
+        loading={deleteTask.isPending}
+        onConfirm={onDelete}
+      />
     </RouteModal>
   )
 }

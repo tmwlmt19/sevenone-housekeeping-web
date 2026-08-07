@@ -40,6 +40,10 @@ export function useUpdateRoomStatus() {
           body: { status },
         }),
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.rooms(hotelId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.rooms(hotelId) })
+      // Keep the floor-map status colors live after a status change.
+      qc.invalidateQueries({ queryKey: qk.map(hotelId) })
+    },
   })
 }

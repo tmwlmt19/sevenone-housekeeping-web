@@ -24,9 +24,11 @@ export const router = createBrowserRouter([
       { index: true, element: <RootRedirect /> },
       // Self-service account page — any authenticated role.
       { path: 'account', element: <AccountPage /> },
-      // Manager / admin — desktop AppShell.
+      // Manager / front desk / admin — desktop AppShell. Front desk shares the
+      // manager's views; the request modals + Requests page below stay
+      // manager-only (nested RequireRole allow={['manager']}).
       {
-        element: <RequireRole allow={['admin', 'manager']} />,
+        element: <RequireRole allow={['admin', 'manager', 'front_desk']} />,
         children: [
           {
             element: <AppShell />,

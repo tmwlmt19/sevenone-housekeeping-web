@@ -5,6 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/auth-context'
 import { PreferencesMenu } from '@/components/preferences-menu'
 import { Button } from '@/components/ui/button'
+import {
+  ClockInGate,
+  OnShiftBanner,
+  OnShiftIndicator,
+} from '@/features/shifts/clock-in-gate'
 
 export function MobileShell() {
   const { t } = useTranslation()
@@ -13,7 +18,10 @@ export function MobileShell() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
       <header className="flex h-14 items-center justify-between border-b px-4">
-        <span className="font-semibold">SevenOne</span>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">SevenOne</span>
+          <OnShiftIndicator />
+        </div>
         <div className="flex items-center gap-1">
           <PreferencesMenu />
           <Button
@@ -32,8 +40,11 @@ export function MobileShell() {
           </Button>
         </div>
       </header>
+      <OnShiftBanner />
       <main className="flex-1 p-4">
-        <Outlet />
+        <ClockInGate>
+          <Outlet />
+        </ClockInGate>
       </main>
     </div>
   )

@@ -37,30 +37,32 @@ interface NavItem {
   roles: Role[]
 }
 
+// Front desk shares the manager's operational views (dashboard, rooms, staff,
+// tasks) but NOT the Requests tab — filing add/remove requests is manager-only.
 const NAV_ITEMS: readonly NavItem[] = [
   {
     to: '/dashboard',
     labelKey: 'nav.dashboard',
     icon: LayoutDashboard,
-    roles: ['admin', 'manager'],
+    roles: ['admin', 'manager', 'front_desk'],
   },
   {
     to: '/rooms',
     labelKey: 'nav.rooms',
     icon: BedDouble,
-    roles: ['admin', 'manager'],
+    roles: ['admin', 'manager', 'front_desk'],
   },
   {
     to: '/staff',
     labelKey: 'nav.staff',
     icon: Users,
-    roles: ['admin', 'manager'],
+    roles: ['admin', 'manager', 'front_desk'],
   },
   {
     to: '/tasks',
     labelKey: 'nav.tasks',
     icon: ClipboardList,
-    roles: ['admin', 'manager'],
+    roles: ['admin', 'manager', 'front_desk'],
   },
   {
     to: '/requests',
