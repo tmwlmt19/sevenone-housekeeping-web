@@ -606,8 +606,11 @@ export interface paths {
         };
         /**
          * Task Load
-         * @description Per housekeeper: tasks assigned/completed and utilization; plus the
-         *     hotel-wide utilization (are more or fewer housekeepers needed?).
+         * @description Per housekeeper: current open tasks (live) + completions in the window,
+         *     and utilization; plus hotel-wide utilization (are more/fewer housekeepers
+         *     needed?). Open-task counts are live board state; completions/utilization are
+         *     over the window. When the window includes today, currently-open shifts count
+         *     toward utilization so it isn't blank until someone logs out.
          */
         get: operations["task_load_api_v1_hotels__hotel_id__stats_task_load_get"];
         put?: never;
@@ -1254,8 +1257,8 @@ export interface components {
             housekeeper_id: string;
             /** Name */
             name: string;
-            /** Tasks Assigned */
-            tasks_assigned: number;
+            /** Open Tasks */
+            open_tasks: number;
             /** Tasks Completed */
             tasks_completed: number;
             /** Clean Seconds Total */

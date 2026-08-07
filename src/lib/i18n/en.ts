@@ -217,15 +217,16 @@ export const en = {
     },
     taskLoad: {
       title: 'Task load',
-      subtitle: 'How work is distributed and how busy the team is.',
+      subtitle:
+        'Open tasks are the current board; completions and utilization cover the selected range.',
       bar: 'Bar',
       pie: 'Pie',
-      assigned: 'Assigned',
+      open: 'Open tasks',
       completed: 'Completed',
       utilization: 'Utilization',
       hotelUtilization: 'Hotel utilization',
       utilizationHint:
-        'Cleaning time as a share of shift time — low can mean overstaffed, high can mean understaffed.',
+        'Cleaning time as a share of shift time (needs clock-in/out) — low can mean overstaffed, high can mean understaffed.',
     },
   },
   clock: {

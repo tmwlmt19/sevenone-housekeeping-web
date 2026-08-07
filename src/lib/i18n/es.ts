@@ -222,15 +222,16 @@ export const es: Catalog = {
     },
     taskLoad: {
       title: 'Carga de tareas',
-      subtitle: 'Cómo se reparte el trabajo y qué tan ocupado está el equipo.',
+      subtitle:
+        'Las tareas abiertas son el tablero actual; las completadas y la utilización cubren el rango seleccionado.',
       bar: 'Barras',
       pie: 'Circular',
-      assigned: 'Asignadas',
+      open: 'Tareas abiertas',
       completed: 'Completadas',
       utilization: 'Utilización',
       hotelUtilization: 'Utilización del hotel',
       utilizationHint:
-        'Tiempo de limpieza como proporción del tiempo de turno: bajo puede indicar exceso de personal; alto, falta de personal.',
+        'Tiempo de limpieza como proporción del tiempo de turno (requiere registro de entrada/salida): bajo puede indicar exceso de personal; alto, falta de personal.',
     },
   },
   clock: {
