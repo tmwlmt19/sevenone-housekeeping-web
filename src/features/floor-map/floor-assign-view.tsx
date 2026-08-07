@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -54,6 +55,7 @@ export function FloorAssignView() {
   const { data: map, isLoading, isError } = useHotelMap()
   const { data: staff } = useStaff()
   const importRooms = useImportDirtyRooms()
+  const [params] = useSearchParams()
 
   const [floor, setFloor] = useState<number>()
   // Zone plan (roomId → housekeeperId), kept across floor switches.
@@ -65,7 +67,10 @@ export function FloorAssignView() {
   const [priority, setPriority] = useState<TaskPriority>('normal')
   // Which housekeepers have their assigned-room list expanded in the palette.
   const [expandedHks, setExpandedHks] = useState<Set<string>>(new Set())
-  const [autoOpen, setAutoOpen] = useState(false)
+  // Deep-link from the dirty-room import's "optimized auto-assign" path lands
+  // here with ?auto=optimized — open the optimizer straight away so the manager
+  // isn't left hunting for it.
+  const [autoOpen, setAutoOpen] = useState(params.get('auto') === 'optimized')
 
   useEffect(() => {
     if (!map || floor !== undefined) return

@@ -1,4 +1,4 @@
-import { Download, Map, Upload, Users } from 'lucide-react'
+import { Download, Map, Sparkles, Split, Upload } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -40,9 +40,10 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
-// How the uploaded rooms become work: split evenly across housekeepers now, or
-// mark them dirty and hand-assign them on the floor map.
-type Method = 'auto' | 'map'
+// How the uploaded rooms become work: hand off to the map's optimized
+// auto-assign, split evenly across housekeepers now, or mark them dirty and
+// hand-assign them on the floor map.
+type Method = 'optimized' | 'auto' | 'map'
 
 export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
   const { t } = useTranslation()
@@ -54,7 +55,7 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
 
   const [fileName, setFileName] = useState('')
   const [roomNumbers, setRoomNumbers] = useState<string[]>([])
-  const [method, setMethod] = useState<Method>('auto')
+  const [method, setMethod] = useState<Method>('optimized')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [priority, setPriority] = useState<TaskPriority>('normal')
 
@@ -80,7 +81,7 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
   function reset() {
     setFileName('')
     setRoomNumbers([])
-    setMethod('auto')
+    setMethod('optimized')
     setSelected(new Set())
     setPriority('normal')
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -143,6 +144,17 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
   // Assign on the map: mark the rooms dirty (no tasks yet), then jump to the
   // floor map's assign view to group and assign them there.
   function handleMapSubmit() {
+    markDirtyThenGoToMap('/rooms?view=map&mode=assign')
+  }
+
+  // Optimized auto-assign: mark the rooms dirty (no tasks yet), then jump to the
+  // floor map's assign view with the optimized auto-assign modal opened, so the
+  // manager lands straight in that flow instead of hunting for the button.
+  function handleOptimizedSubmit() {
+    markDirtyThenGoToMap('/rooms?view=map&mode=assign&auto=optimized')
+  }
+
+  function markDirtyThenGoToMap(destination: string) {
     importRooms.mutate(
       { rooms: known, create_tasks: false },
       {
@@ -151,7 +163,7 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
             t('importRooms.markedDirtyCount', { count: res.rooms_set_dirty }),
           )
           handleClose(false)
-          navigate('/rooms?view=map&mode=assign')
+          navigate(destination)
         },
         onError,
       },
@@ -222,9 +234,16 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
           {hasRooms && (
             <div className="flex flex-col gap-2">
               <Label>{t('importRooms.method')}</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <MethodCard
-                  icon={Users}
+                  icon={Sparkles}
+                  title={t('importRooms.methodOptimized')}
+                  hint={t('importRooms.methodOptimizedHint')}
+                  active={method === 'optimized'}
+                  onClick={() => setMethod('optimized')}
+                />
+                <MethodCard
+                  icon={Split}
                   title={t('importRooms.methodAuto')}
                   hint={t('importRooms.methodAutoHint')}
                   active={method === 'auto'}
@@ -303,6 +322,13 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
             </>
           )}
 
+          {/* Optimized: brief explanation of what happens next */}
+          {hasRooms && method === 'optimized' && (
+            <p className="text-muted-foreground rounded-md border bg-muted/30 p-3 text-sm">
+              {t('importRooms.optimizedExplainer', { count: known.length })}
+            </p>
+          )}
+
           {/* Map: brief explanation of what happens next */}
           {hasRooms && method === 'map' && (
             <p className="text-muted-foreground rounded-md border bg-muted/30 p-3 text-sm">
@@ -319,13 +345,25 @@ export function ImportDirtyRoomsModal({ open, onOpenChange }: Props) {
           >
             {t('common.cancel')}
           </Button>
-          {method === 'auto' ? (
+          {method === 'auto' && (
             <Button type="button" disabled={!canSubmit} onClick={handleAutoSubmit}>
               {importRooms.isPending
                 ? t('importRooms.importing')
                 : t('importRooms.createTasks', { count: known.length })}
             </Button>
-          ) : (
+          )}
+          {method === 'optimized' && (
+            <Button
+              type="button"
+              disabled={!canSubmit}
+              onClick={handleOptimizedSubmit}
+            >
+              {importRooms.isPending
+                ? t('importRooms.importing')
+                : t('importRooms.markDirtyAndOptimize')}
+            </Button>
+          )}
+          {method === 'map' && (
             <Button type="button" disabled={!canSubmit} onClick={handleMapSubmit}>
               {importRooms.isPending
                 ? t('importRooms.importing')
@@ -345,7 +383,7 @@ function MethodCard({
   active,
   onClick,
 }: {
-  icon: typeof Users
+  icon: typeof Sparkles
   title: string
   hint: string
   active: boolean
