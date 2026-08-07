@@ -59,9 +59,9 @@ export function TaskLoadCard({ range }: { range: StatRange }) {
     )
   }
 
-  const assigned: Slice[] = load.map((h) => ({
+  const openTasks: Slice[] = load.map((h) => ({
     name: h.name,
-    value: h.tasks_assigned,
+    value: h.open_tasks,
   }))
   const completed: Slice[] = load.map((h) => ({
     name: h.name,
@@ -104,11 +104,11 @@ export function TaskLoadCard({ range }: { range: StatRange }) {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="flex flex-col gap-2">
               <h3 className="text-sm font-medium">
-                {t('stats.taskLoad.assigned')}
+                {t('stats.taskLoad.open')}
               </h3>
               <MetricChart
-                slices={assigned}
-                label={t('stats.taskLoad.assigned')}
+                slices={openTasks}
+                label={t('stats.taskLoad.open')}
               />
             </div>
             <div className="flex flex-col gap-2">
