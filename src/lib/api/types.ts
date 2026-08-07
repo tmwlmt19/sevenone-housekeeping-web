@@ -76,6 +76,19 @@ export function isMergeableKind(kind: DecorationKind): boolean {
   return kind === 'hall' || kind === 'lobby'
 }
 
+// Stats dashboard.
+export type CleanTimesResponse = Schemas['CleanTimesResponse']
+export type EfficiencyResponse = Schemas['EfficiencyResponse']
+export type TaskLoadResponse = Schemas['TaskLoadResponse']
+export type RoomTypeAvg = Schemas['RoomTypeAvg']
+export type HousekeeperRoomTypeAvg = Schemas['HousekeeperRoomTypeAvg']
+export type HousekeeperEfficiency = Schemas['HousekeeperEfficiency']
+export type HousekeeperLoad = Schemas['HousekeeperLoad']
+
+// Shifts (housekeeper clock-in/out).
+export type Shift = Schemas['ShiftRead']
+export type CurrentShiftResponse = Schemas['CurrentShiftResponse']
+
 export type Task = Schemas['TaskRead']
 export type TaskCreate = Schemas['TaskCreate']
 export type TaskUpdate = Schemas['TaskUpdate']

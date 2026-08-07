@@ -15,6 +15,7 @@ function task(id: string, roomId: string, status: TaskStatus): Task {
     priority: 'normal',
     notes: null,
     due_date: null,
+    started_at: null,
     completed_at: null,
     created_at: '2026-08-05T00:00:00Z',
     updated_at: '2026-08-05T00:00:00Z',
