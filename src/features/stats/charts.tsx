@@ -77,6 +77,7 @@ const legendFormatter = (value: string) => (
   <span className="text-muted-foreground text-xs">{value}</span>
 )
 
+const Y_AXIS_WIDTH = 44
 const AXIS_TICK = { fill: 'var(--muted-foreground)', fontSize: 12 }
 
 export interface SeriesBarChartProps {
@@ -101,55 +102,76 @@ export function SeriesBarChart({
   height = 280,
 }: SeriesBarChartProps) {
   const showLegend = series.length > 1
+  // Give each category enough room for its label + bars; below that the chart
+  // keeps its natural width and the wrapper scrolls sideways instead of
+  // squishing/overlapping the axis labels.
+  const minWidth = Y_AXIS_WIDTH + data.length * (series.length * 28 + 56)
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 16, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey={categoryKey}
-          tick={AXIS_TICK}
-          tickLine={false}
-          axisLine={{ stroke: 'var(--border)' }}
-          interval={0}
-        />
-        <YAxis
-          tick={AXIS_TICK}
-          tickLine={false}
-          axisLine={false}
-          width={44}
-          tickFormatter={(v: number) => `${v}${unit ?? ''}`}
-        />
-        <Tooltip
-          cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
-          content={<ChartTooltip valueFormatter={valueFormatter} />}
-        />
-        {showLegend && (
-          <Legend formatter={legendFormatter} iconType="circle" iconSize={8} />
-        )}
-        {series.map((s) => (
-          <Bar
-            key={s.key}
-            dataKey={s.key}
-            name={s.name}
-            fill={s.color}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={56}
+    <div className="overflow-x-auto" tabIndex={0}>
+      <div style={{ minWidth }}>
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart
+            data={data}
+            margin={{ top: 16, right: 8, bottom: 0, left: 0 }}
           >
-            {showValueLabels && (
-              <LabelList
-                dataKey={s.key}
-                position="top"
-                className="fill-muted-foreground"
-                fontSize={11}
-                formatter={(value) =>
-                  valueFormatter ? valueFormatter(Number(value)) : String(value)
-                }
+            <CartesianGrid
+              stroke="var(--border)"
+              strokeDasharray="3 3"
+              vertical={false}
+            />
+            <XAxis
+              dataKey={categoryKey}
+              tick={AXIS_TICK}
+              tickLine={false}
+              axisLine={{ stroke: 'var(--border)' }}
+              interval={0}
+            />
+            <YAxis
+              tick={AXIS_TICK}
+              tickLine={false}
+              axisLine={false}
+              width={Y_AXIS_WIDTH}
+              tickFormatter={(v: number) => `${v}${unit ?? ''}`}
+            />
+            <Tooltip
+              cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+              content={<ChartTooltip valueFormatter={valueFormatter} />}
+            />
+            {showLegend && (
+              <Legend
+                formatter={legendFormatter}
+                iconType="circle"
+                iconSize={8}
               />
             )}
-          </Bar>
-        ))}
-      </BarChart>
-    </ResponsiveContainer>
+            {series.map((s) => (
+              <Bar
+                key={s.key}
+                dataKey={s.key}
+                name={s.name}
+                fill={s.color}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={56}
+              >
+                {showValueLabels && (
+                  <LabelList
+                    dataKey={s.key}
+                    position="top"
+                    className="fill-muted-foreground"
+                    fontSize={11}
+                    formatter={(value) =>
+                      valueFormatter
+                        ? valueFormatter(Number(value))
+                        : String(value)
+                    }
+                  />
+                )}
+              </Bar>
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   )
 }
 
